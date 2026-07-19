@@ -102,87 +102,142 @@ function getFallbackResponse(userMessage: string, dbProducts: any[]): string {
     return "";
   };
 
-  // 1. Greetings
+  // A. Roman Urdu & English Greetings
   const isGreeting =
     msg.includes("hello") ||
+    msg.includes("helo") ||
     msg.includes("hi") ||
     msg.includes("hey") ||
-    msg.includes("good morning") ||
+    msg.includes("morning") ||
     msg.includes("salam") ||
     msg.includes("assalam") ||
+    msg.includes("aslam") ||
     msg.includes("aoa") ||
+    msg.includes("yo") ||
+    msg.includes("hola") ||
     msg === "";
+
+  // B. Roman Urdu & English "How are you" / Greetings check
+  const isSmallTalk =
+    msg.includes("how are you") ||
+    msg.includes("how r u") ||
+    msg.includes("kese") ||
+    msg.includes("kaise") ||
+    msg.includes("hal") ||
+    msg.includes("haal") ||
+    msg.includes("kheriyat") ||
+    msg.includes("khairiyat") ||
+    msg.includes("fine") ||
+    msg.includes("theek");
+
+  // C. Thank you / OK
+  const isThanks =
+    msg.includes("thank") ||
+    msg.includes("thanks") ||
+    msg.includes("shukriya") ||
+    msg.includes("ty") ||
+    msg.includes("ok") ||
+    msg.includes("okay") ||
+    msg.includes("ji") ||
+    msg.includes("yes") ||
+    msg.includes("haan");
 
   if (isGreeting) {
     const greetings = [
       "Welcome to Luxella! It's wonderful to have you here. How may I help you find your perfect jewelry today? ✨",
       "Hello! I'm delighted you're here. Are you shopping for yourself or looking for a special gift? 💎",
-      "Welcome! Let's find something truly beautiful together. What occasion are we styling for today? 🤍",
+      "Welcome! Let's find something truly beautiful together. What style are you looking for today? 🤍",
     ];
     return greetings[Math.floor(Math.random() * greetings.length)];
   }
 
-  // 2. Small Talk "How are you"
-  if (
-    msg.includes("how are you") ||
-    msg.includes("how r u") ||
-    msg.includes("kaise ho") ||
-    msg.includes("kese ho") ||
-    msg.includes("kese hain") ||
-    msg.includes("kaise hain") ||
-    msg.includes("kya haal") ||
-    msg.includes("kia haal")
-  ) {
+  if (isSmallTalk) {
     return "I'm doing wonderful, thank you for asking. 😊 I hope you're having a lovely day too. What beautiful jewelry can I help you discover today? ✨";
   }
 
-  // 3. Necklaces
-  if (msg.includes("necklace") || msg.includes("haar") || msg.includes("gale ka") || msg.includes("set")) {
-    const sug = getProductSug("Necklaces");
-    return `Our necklaces are crafted to perfection ✨ From delicate gold chains to bold bridal sets, we carry stunning pieces. ${sug} Visit /shop?category=Necklaces to explore. Would you like help finding a specific set?`;
+  if (isThanks) {
+    return "It is my absolute pleasure! 🤍 Let me know if you want to preview any of our designs with the AI Try-On, or if I should recommend a matching bracelet! 💎";
   }
 
-  // 4. Earrings
-  if (msg.includes("earring") || msg.includes("jhumk") || msg.includes("baali") || msg.includes("tops")) {
+  // Necklaces
+  if (msg.includes("necklace") || msg.includes("haar") || msg.includes("gale") || msg.includes("chain") || msg.includes("pendant")) {
+    const sug = getProductSug("Necklaces");
+    return `Our necklaces are crafted to perfection ✨ From delicate gold chains to bold statement pieces, we have something for every style. ${sug} Visit /shop?category=Necklaces to explore. Would you like help finding a specific set?`;
+  }
+
+  // Earrings
+  if (msg.includes("earring") || msg.includes("jhumk") || msg.includes("baali") || msg.includes("tops") || msg.includes("ear")) {
     const sug = getProductSug("Earrings");
     return `Our earring collection is simply stunning 💍 Studs, drop earrings, and luxury hoops — all hypoallergenic. ${sug} Browse them at /shop?category=Earrings. Any particular design in mind?`;
   }
 
-  // 5. Rings
-  if (msg.includes("ring") || msg.includes("angothi") || msg.includes("chhalla")) {
+  // Rings
+  if (msg.includes("ring") || msg.includes("angothi") || msg.includes("chhalla") || msg.includes("finger")) {
     const sug = getProductSug("Rings");
     return `Our rings range from minimalist gold bands to premium zirconia statement pieces ✨ ${sug} Check them out at /shop?category=Rings!`;
   }
 
-  // 6. Bracelets
-  if (msg.includes("bracelet") || msg.includes("kangan") || msg.includes("kara") || msg.includes("churi")) {
+  // Bracelets
+  if (msg.includes("bracelet") || msg.includes("kangan") || msg.includes("kara") || msg.includes("churi") || msg.includes("wrist") || msg.includes("bangle")) {
     const sug = getProductSug("Bracelets");
     return `Our bracelets are the perfect finishing touch 💎 Elegant chains and structured gold plating. ${sug} Explore at /shop?category=Bracelets.`;
   }
 
-  // 7. Pricing / Rates
+  // Pricing
   if (
     msg.includes("price") ||
     msg.includes("cost") ||
     msg.includes("how much") ||
     msg.includes("budget") ||
-    msg.includes("kitne ka") ||
-    msg.includes("kitne ki") ||
-    msg.includes("rate")
+    msg.includes("kitne") ||
+    msg.includes("kitnay") ||
+    msg.includes("paisa") ||
+    msg.includes("rate") ||
+    msg.includes("pkr") ||
+    msg.includes("rs")
   ) {
     return "Luxella offers affordable luxury! 💎 Direct product cards show our live prices (ranging from Rs. 1,500 to Rs. 4,500). Visit our /shop page to see the full collection. Is there a specific budget you're working within?";
   }
 
-  // 8. Shipping / Delivery
-  if (msg.includes("shipping") || msg.includes("delivery") || msg.includes("deliver") || msg.includes("kab milega")) {
+  // Shipping
+  if (msg.includes("shipping") || msg.includes("delivery") || msg.includes("deliver") || msg.includes("kab") || msg.includes("days") || msg.includes("time")) {
     return "We ship all across Pakistan! 📦 Delivery takes 3–5 business days after order confirmation. All orders are carefully packed in our luxury boxes to ensure perfect condition.";
   }
 
-  // 9. Returns
-  if (msg.includes("return") || msg.includes("exchange") || msg.includes("refund")) {
+  // Returns
+  if (msg.includes("return") || msg.includes("exchange") || msg.includes("refund") || msg.includes("wapis") || msg.includes("policy")) {
     return "We offer hassle-free returns and exchanges within 7 days 💎 If you're not satisfied, email us at osamaafzal1432901@gmail.com or WhatsApp +92 349 5804586. We want you to love your Luxella pieces!";
   }
 
-  // 10. General fallback redirecting to luxury assistant role
-  return "I'm here to help you with Luxella jewelry, styling, gifting, and shopping. How can I assist you with that today? 💎";
+  // Materials & Care
+  if (
+    msg.includes("material") ||
+    msg.includes("quality") ||
+    msg.includes("allerg") ||
+    msg.includes("skin") ||
+    msg.includes("metal") ||
+    msg.includes("gold") ||
+    msg.includes("silver") ||
+    msg.includes("plating")
+  ) {
+    return "All Luxella jewelry uses hypoallergenic metals, making them 100% safe for sensitive skin ✨ We use high-grade zirconia stones and premium gold/silver plating. To maintain shine, avoid contact with perfume/water.";
+  }
+
+  // Gift Studio
+  if (msg.includes("gift") || msg.includes("present") || msg.includes("birthday") || msg.includes("wedding") || msg.includes("shadi") || msg.includes("eid")) {
+    return "Luxella jewelry makes a beautiful gift! 🎁 We offer luxury curated sets and signature gift box upgrades (+ Rs. 499) at checkout. Would you like me to help you choose the perfect item?";
+  }
+
+  // Showroom
+  if (msg.includes("location") || msg.includes("address") || msg.includes("showroom") || msg.includes("office") || msg.includes("kahan") || msg.includes("shop")) {
+    return "You are always welcome! 💎 Visit our showroom at Factory No 51, Model Town, Islamabad. Open Mon–Sat, 10AM–8PM. Support Email: osamaafzal1432901@gmail.com | WhatsApp/Call: +92 349 5804586.";
+  }
+
+  // General fallback - guide to shop and showcase a bestseller product!
+  const defaultProduct = dbProducts[0];
+  const productPromotion = defaultProduct
+    ? ` For example, you might love our [${defaultProduct.name}](/product/${defaultProduct.id}) for Rs. ${defaultProduct.price.toLocaleString()}! 💎`
+    : "";
+
+  return `I'm here to help you with Luxella jewelry styling, sizing, and gifting. ${productPromotion} How can I assist you with your shopping today? ✨`;
 }
