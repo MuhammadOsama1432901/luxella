@@ -94,9 +94,33 @@ Every response should feel like it comes from a luxury boutique consultant. Alwa
 function getFallbackResponse(userMessage: string, dbProducts: any[]): string {
   const msg = userMessage.toLowerCase().trim();
 
+  // ── Helper to detect user language input ────────────────────────────────────
+  const detectLanguage = (input: string): "ur_script" | "ur_roman" | "en" => {
+    // Check for Urdu script unicode block
+    if (/[\u0600-\u06FF]/.test(input)) return "ur_script";
+
+    const romanUrduKeywords = [
+      "kese", "kaise", "kya", "kia", "hal", "haal", "theek", "thik", "salam", "assalam",
+      "aoa", "kitne", "kitnay", "price", "rate", "wapis", "badal", "haar", "jhumk", "angothi",
+      "paisa", "chahiye", "hai", "hain", "helo", "shukriya", "bhai", "yaar"
+    ];
+    
+    const words = input.split(/\s+/);
+    const matched = words.filter(w => romanUrduKeywords.includes(w)).length;
+    return matched >= 1 ? "ur_roman" : "en";
+  };
+
+  const lang = detectLanguage(msg);
+
   const getProductSug = (cat: string) => {
     const matched = dbProducts.find((p) => p.category?.toLowerCase() === cat.toLowerCase());
     if (matched) {
+      if (lang === "ur_script") {
+        return `ہماری سب سے بہترین سفارش [${matched.name}](/product/${matched.id}) ہے جس کی قیمت ${matched.price.toLocaleString()} روپے ہے۔`;
+      }
+      if (lang === "ur_roman") {
+        return `Humari top recommendation [${matched.name}](/product/${matched.id}) hai jiski price Rs. ${matched.price.toLocaleString()} hai.`;
+      }
       return `Our top recommendation is the [${matched.name}](/product/${matched.id}) for Rs. ${matched.price.toLocaleString()}.`;
     }
     return "";
@@ -142,48 +166,93 @@ function getFallbackResponse(userMessage: string, dbProducts: any[]): string {
     msg.includes("yes") ||
     msg.includes("haan");
 
+  // ── 1. GREETING HANDLERS ───────────────────────────────────────────────────
   if (isGreeting) {
+    if (lang === "ur_script") {
+      return "السلام علیکم! 💎 لکسیلا میں خوش آمدید۔ میں آپ کی پرسنل اسٹائلسٹ لیکسا ہوں۔ آج میں آپ کے لیے کیا خوبصورت جیولری تلاش کروں؟ ✨";
+    }
+    if (lang === "ur_roman") {
+      return "Assalam-o-Alaikum! 💎 Luxella mein khush aamdeed. Main Lexa hoon, aapki personal AI stylist. Aaj main aapke liye kya khubsoorat jewelry find karoon? ✨";
+    }
     const greetings = [
-      "Welcome to Luxella! It's wonderful to have you here. How may I help you find your perfect jewelry today? ✨",
+      "Welcome to Luxella! It's wonderful to have you here. I'm Lexa, your personal stylist. How may I help you find your perfect jewelry today? ✨",
       "Hello! I'm delighted you're here. Are you shopping for yourself or looking for a special gift? 💎",
       "Welcome! Let's find something truly beautiful together. What style are you looking for today? 🤍",
     ];
     return greetings[Math.floor(Math.random() * greetings.length)];
   }
 
+  // ── 2. SMALL TALK HANDLERS ─────────────────────────────────────────────────
   if (isSmallTalk) {
+    if (lang === "ur_script") {
+      return "میں بالکل ٹھیک ہوں، پوچھنے کے لیے بہت شکریہ! 😊 امید ہے آپ کا دن بھی اچھا گزر رہا ہو گا۔ آج آپ کو کیا خوبصورت جیولری دکھاؤں؟ ✨";
+    }
+    if (lang === "ur_roman") {
+      return "Main bilkul theek hoon, poochne ke liye shukriya! 😊 Umeed hai aapka din bhi bohot accha guzar raha hoga. Aaj aapko kya khubsoorat jewelry dikhaon? ✨";
+    }
     return "I'm doing wonderful, thank you for asking. 😊 I hope you're having a lovely day too. What beautiful jewelry can I help you discover today? ✨";
   }
 
+  // ── 3. THANKS HANDLERS ─────────────────────────────────────────────────────
   if (isThanks) {
+    if (lang === "ur_script") {
+      return "یہ تو میرا فرض ہے! 🤍 اگر آپ کوئی جیولری ٹرائی کرنا چاہتی ہیں تو ہمارے AI Try-On کو ضرور استعمال کریں۔ 💎";
+    }
+    if (lang === "ur_roman") {
+      return "Ye to mera farz hai! 🤍 Agar aap koi jewelry try karna chahti hain to hamare AI Try-On ko zaroor use karein. Main matching sets bhi recommend kar sakti hoon! 💎";
+    }
     return "It is my absolute pleasure! 🤍 Let me know if you want to preview any of our designs with the AI Try-On, or if I should recommend a matching bracelet! 💎";
   }
 
-  // Necklaces
+  // ── 4. NECKLACES ───────────────────────────────────────────────────────────
   if (msg.includes("necklace") || msg.includes("haar") || msg.includes("gale") || msg.includes("chain") || msg.includes("pendant")) {
     const sug = getProductSug("Necklaces");
-    return `Our necklaces are crafted to perfection ✨ From delicate gold chains to bold statement pieces, we have something for every style. ${sug} Visit /shop?category=Necklaces to explore. Would you like help finding a specific set?`;
+    if (lang === "ur_script") {
+      return `ہمارے ہار اور پینڈنٹ خوبصورتی کی پہچان ہیں ✨ نازک زنجیروں سے لے کر دلہن کے سیٹ تک سب دستیاب ہے۔ ${sug} مزید دیکھنے کے لیے /shop?category=Necklaces وزٹ کریں۔`;
+    }
+    if (lang === "ur_roman") {
+      return `Hamare necklaces bohot hi khubsoorat hain ✨ Delicate chains se le kar bridal sets tak sab mil jayega. ${sug} Aap /shop?category=Necklaces par browse kar sakti hain.`;
+    }
+    return `Our necklaces are crafted to perfection ✨ From delicate gold chains to bold statement pieces, we have something for every style. ${sug} Visit /shop?category=Necklaces to explore.`;
   }
 
-  // Earrings
+  // ── 5. EARRINGS ────────────────────────────────────────────────────────────
   if (msg.includes("earring") || msg.includes("jhumk") || msg.includes("baali") || msg.includes("tops") || msg.includes("ear")) {
     const sug = getProductSug("Earrings");
-    return `Our earring collection is simply stunning 💍 Studs, drop earrings, and luxury hoops — all hypoallergenic. ${sug} Browse them at /shop?category=Earrings. Any particular design in mind?`;
+    if (lang === "ur_script") {
+      return `ہمارے جھمکے اور بالیاں بہت ہی خوبصورت ہیں 💍 تمام جیولری حساس جلد کے لیے محفوظ (hypoallergenic) ہے۔ ${sug} مزید دیکھنے کے لیے /shop?category=Earrings وزٹ کریں۔`;
+    }
+    if (lang === "ur_roman") {
+      return `Hamare earrings aur jhumkay bohot hi stunning hain 💍 Sensitive skin ke liye 100% safe hain. ${sug} Mazeed dekhne ke liye /shop?category=Earrings visit karein.`;
+    }
+    return `Our earring collection is simply stunning 💍 Studs, drop earrings, and luxury hoops — all hypoallergenic. ${sug} Browse them at /shop?category=Earrings.`;
   }
 
-  // Rings
+  // ── 6. RINGS ───────────────────────────────────────────────────────────────
   if (msg.includes("ring") || msg.includes("angothi") || msg.includes("chhalla") || msg.includes("finger")) {
     const sug = getProductSug("Rings");
+    if (lang === "ur_script") {
+      return `ہماری انگوٹھیاں سونے اور چاندی کی پالش میں دستیاب ہیں ✨ جن میں اعلیٰ کوالٹی کے زرکون پتھر لگے ہیں۔ ${sug} آپ /shop?category=Rings پر دیکھ سکتی ہیں۔`;
+    }
+    if (lang === "ur_roman") {
+      return `Hamari rings gold aur silver plating mein available hain ✨ jin mein premium zirconia stones lage hain. ${sug} Aap /shop?category=Rings par dekh sakti hain!`;
+    }
     return `Our rings range from minimalist gold bands to premium zirconia statement pieces ✨ ${sug} Check them out at /shop?category=Rings!`;
   }
 
-  // Bracelets
+  // ── 7. BRACELETS ───────────────────────────────────────────────────────────
   if (msg.includes("bracelet") || msg.includes("kangan") || msg.includes("kara") || msg.includes("churi") || msg.includes("wrist") || msg.includes("bangle")) {
     const sug = getProductSug("Bracelets");
+    if (lang === "ur_script") {
+      return `ہمارے کنگن اور کڑے آپ کے ہاتھ کی خوبصورتی کو بڑھاتے ہیں 💎 سونے کی کوٹنگ اور خوبصورت ڈیزائن کے ساتھ۔ ${sug} آپ /shop?category=Bracelets پر دیکھ سکتی ہیں۔`;
+    }
+    if (lang === "ur_roman") {
+      return `Hamare bracelets aur karay aapke haathon ki khubsoorati ko barhate hain 💎 Gold plating aur elegant designs ke sath. ${sug} Explore at /shop?category=Bracelets.`;
+    }
     return `Our bracelets are the perfect finishing touch 💎 Elegant chains and structured gold plating. ${sug} Explore at /shop?category=Bracelets.`;
   }
 
-  // Pricing
+  // ── 8. PRICING ─────────────────────────────────────────────────────────────
   if (
     msg.includes("price") ||
     msg.includes("cost") ||
@@ -196,48 +265,56 @@ function getFallbackResponse(userMessage: string, dbProducts: any[]): string {
     msg.includes("pkr") ||
     msg.includes("rs")
   ) {
+    if (lang === "ur_script") {
+      return "لکسیلا مناسب قیمت پر لگژری فراہم کرتا ہے! 💎 قیمتیں انگوٹھیوں اور ہاروں کے لیے 1500 سے 4500 روپے تک ہیں۔ آپ /shop وزٹ کر کے تمام ریٹس دیکھ سکتی ہیں۔";
+    }
+    if (lang === "ur_roman") {
+      return "Luxella affordable luxury provide karta hai! 💎 Humare rates Rs. 1,500 se Rs. 4,500 tak hain. Aap /shop visit kar ke sab prices dekh sakti hain.";
+    }
     return "Luxella offers affordable luxury! 💎 Direct product cards show our live prices (ranging from Rs. 1,500 to Rs. 4,500). Visit our /shop page to see the full collection. Is there a specific budget you're working within?";
   }
 
-  // Shipping
+  // ── 9. SHIPPING ────────────────────────────────────────────────────────────
   if (msg.includes("shipping") || msg.includes("delivery") || msg.includes("deliver") || msg.includes("kab") || msg.includes("days") || msg.includes("time")) {
+    if (lang === "ur_script") {
+      return "ہم پورے پاکستان میں ڈیلیوری کرتے ہیں! 📦 آرڈر کی تصدیق کے بعد 3 سے 5 کاروباری دنوں میں پارسل مل جائے گا۔ ڈیلیوری بالکل محفوظ ہے۔";
+    }
+    if (lang === "ur_roman") {
+      return "Hum pure Pakistan mein deliver karte hain! 📦 Order confirm hone ke baad 3–5 business days mein parcel mil jayega. Delivery bilkul safe aur reliable hai.";
+    }
     return "We ship all across Pakistan! 📦 Delivery takes 3–5 business days after order confirmation. All orders are carefully packed in our luxury boxes to ensure perfect condition.";
   }
 
-  // Returns
+  // ── 10. RETURNS ────────────────────────────────────────────────────────────
   if (msg.includes("return") || msg.includes("exchange") || msg.includes("refund") || msg.includes("wapis") || msg.includes("policy")) {
+    if (lang === "ur_script") {
+      return "ہم 7 دنوں کے اندر آسان واپسی اور تبدیلی کی سہولت دیتے ہیں 💎 اگر آپ مطمئن نہیں ہیں تو ہمیں osamaafzal1432901@gmail.com پر میل کریں یا +92 349 5804586 پر واٹس ایپ کریں۔";
+    }
+    if (lang === "ur_roman") {
+      return "Hum 7 days ke andar easy return aur exchange policy dete hain 💎 Agar aap satisfied nahi hain to support@luxella.com par contact karein ya WhatsApp karein.";
+    }
     return "We offer hassle-free returns and exchanges within 7 days 💎 If you're not satisfied, email us at osamaafzal1432901@gmail.com or WhatsApp +92 349 5804586. We want you to love your Luxella pieces!";
   }
 
-  // Materials & Care
-  if (
-    msg.includes("material") ||
-    msg.includes("quality") ||
-    msg.includes("allerg") ||
-    msg.includes("skin") ||
-    msg.includes("metal") ||
-    msg.includes("gold") ||
-    msg.includes("silver") ||
-    msg.includes("plating")
-  ) {
-    return "All Luxella jewelry uses hypoallergenic metals, making them 100% safe for sensitive skin ✨ We use high-grade zirconia stones and premium gold/silver plating. To maintain shine, avoid contact with perfume/water.";
-  }
-
-  // Gift Studio
-  if (msg.includes("gift") || msg.includes("present") || msg.includes("birthday") || msg.includes("wedding") || msg.includes("shadi") || msg.includes("eid")) {
-    return "Luxella jewelry makes a beautiful gift! 🎁 We offer luxury curated sets and signature gift box upgrades (+ Rs. 499) at checkout. Would you like me to help you choose the perfect item?";
-  }
-
-  // Showroom
-  if (msg.includes("location") || msg.includes("address") || msg.includes("showroom") || msg.includes("office") || msg.includes("kahan") || msg.includes("shop")) {
-    return "You are always welcome! 💎 Visit our showroom at Factory No 51, Model Town, Islamabad. Open Mon–Sat, 10AM–8PM. Support Email: osamaafzal1432901@gmail.com | WhatsApp/Call: +92 349 5804586.";
-  }
-
-  // General fallback - guide to shop and showcase a bestseller product!
+  // ── 11. GENERAL FALLBACK REDIRECT ──────────────────────────────────────────
   const defaultProduct = dbProducts[0];
+  
+  if (lang === "ur_script") {
+    const productPromotion = defaultProduct
+      ? `مثال کے طور پر، آپ کو ہمارا [${defaultProduct.name}](/product/${defaultProduct.id}) قیمت ${defaultProduct.price.toLocaleString()} روپے ضرور پسند آئے گا! 💎`
+      : "";
+    return `میں یہاں لکسیلا کی خوبصورت جیولری اور اسٹائلنگ میں آپ کی مدد کے لیے ہوں۔ ${productPromotion} میں آپ کے لیے کیا مدد کروں؟ ✨`;
+  }
+  
+  if (lang === "ur_roman") {
+    const productPromotion = defaultProduct
+      ? `Example ke taur par, aapko humari [${defaultProduct.name}](/product/${defaultProduct.id}) price Rs. ${defaultProduct.price.toLocaleString()} zaroor pasand aayegi! 💎`
+      : "";
+    return `Main yahan Luxella ki khubsoorat jewelry aur styling mein aapki help ke liye hoon. ${productPromotion} Main aapki kya help karoon? ✨`;
+  }
+
   const productPromotion = defaultProduct
     ? ` For example, you might love our [${defaultProduct.name}](/product/${defaultProduct.id}) for Rs. ${defaultProduct.price.toLocaleString()}! 💎`
     : "";
-
   return `I'm here to help you with Luxella jewelry styling, sizing, and gifting. ${productPromotion} How can I assist you with your shopping today? ✨`;
 }
