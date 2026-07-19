@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { useCart } from "@/providers/CartProvider";
 import { CartIcon, UserIcon, MenuIcon } from "@/components/ui/icons";
 import { useRouter, usePathname } from "next/navigation";
-import { LogOut, Shield, Search, X, Home, ShoppingBag, Heart, Settings, ClipboardList, FileText, Sparkles, Compass } from "lucide-react";
+import { LogOut, Shield, Search, X, Home, ShoppingBag, Heart, Settings, ClipboardList, FileText, Sparkles, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "@/providers/ThemeProvider";
 
@@ -365,7 +365,7 @@ export default function Navbar() {
                 <Sparkles size={16} /> AI Virtual Try-On
               </Link>
               <Link href="/gift-studio" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-300 font-medium">
-                <Compass size={16} /> Gift Studio
+                <Gift size={16} /> Gift Studio
               </Link>
             </div>
           </div>
