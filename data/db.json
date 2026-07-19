@@ -171,6 +171,78 @@
       "costPrice": 400,
       "virtualTryOn": true,
       "visibility": "visible"
+    },
+    {
+      "id": 7,
+      "name": "Traditional Kundan Jhumar",
+      "image": "/images/categories/bridal.jpg",
+      "price": 3499,
+      "oldPrice": 4999,
+      "rating": 5,
+      "sale": true,
+      "category": "Bridal",
+      "description": "Exquisitely detailed traditional Kundan Jhumar (passa) styled with 24K gold plating and delicate hanging pearls. An iconic statement piece for bridal, Nikkah, and Mehndi celebrations.",
+      "stock": 8,
+      "featured": true,
+      "specifications": {
+        "Material": "24K Gold Plated Brass",
+        "Stone": "Kundan & Drop Pearls",
+        "Style": "Jhumar / Passa",
+        "Weight": "45g"
+      },
+      "sku": "LXL-JH-07",
+      "barcode": "890100107",
+      "costPrice": 1200,
+      "virtualTryOn": false,
+      "visibility": "visible"
+    },
+    {
+      "id": 8,
+      "name": "Zirconia Choker Set",
+      "image": "/images/products/product1.jpg",
+      "price": 6499,
+      "oldPrice": 8499,
+      "rating": 5,
+      "sale": true,
+      "category": "Necklaces",
+      "description": "Dazzling high-end artificial diamond choker set, adorned with premium cubic zirconia crystals and hanging emerald droplets. Includes matching statement earrings for a royal reception look.",
+      "stock": 5,
+      "featured": true,
+      "specifications": {
+        "Material": "White Gold Plating",
+        "Stone": "Cubic Zirconia & Faux Emerald",
+        "Includes": "Choker Necklace + Hanging Earrings",
+        "Clasp": "Adjustable Thread"
+      },
+      "sku": "LXL-NK-08",
+      "barcode": "890100108",
+      "costPrice": 2500,
+      "virtualTryOn": false,
+      "visibility": "visible"
+    },
+    {
+      "id": 9,
+      "name": "Bridal Polki Bangles",
+      "image": "/images/categories/luxury.jpg",
+      "price": 4499,
+      "oldPrice": 5999,
+      "rating": 5,
+      "sale": false,
+      "category": "Bangles",
+      "description": "Timeless hand-crafted Polki bangle set with gold foil backing and faux ruby accents. Features a traditional screw-opening closure for a secure, comfortable fit on weddings.",
+      "stock": 12,
+      "featured": false,
+      "specifications": {
+        "Material": "Gold Plated Copper",
+        "Stone": "Polki Glass & Synthetic Ruby",
+        "Size": "2.4, 2.6 (Adjustable)",
+        "Closure": "Side Screw"
+      },
+      "sku": "LXL-BG-09",
+      "barcode": "890100109",
+      "costPrice": 1800,
+      "virtualTryOn": false,
+      "visibility": "visible"
     }
   ],
   "orders": [],

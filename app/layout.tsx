@@ -6,17 +6,17 @@ const playfair = { variable: "font-playfair" };
 const poppins = { variable: "font-poppins" };
 
 export const metadata: Metadata = {
-  title: "Luxella | Premium Artificial Jewelry",
+  title: "Luxella | Premium Artificial Jewelry in Pakistan – Bridal & Party Wear",
   description:
-    "Luxury artificial jewelry crafted for elegance. Shop premium necklaces, earrings, rings and bracelets.",
+    "Shop Pakistan's finest hand-crafted artificial jewelry for weddings, bridal events, and party wear. Perfected with 24K gold plating and premium zirconia stones. COD & Express Shipping across Pakistan.",
   keywords: [
-    "Artificial Jewelry",
-    "Luxury Jewelry",
-    "Necklace",
-    "Ring",
-    "Bracelet",
-    "Pakistan",
-    "Fashion",
+    "Artificial Jewelry Pakistan",
+    "Bridal Jewelry Pakistan",
+    "Wedding Jewelry Sets",
+    "Gold Plated Jewelry Pakistan",
+    "Buy Kundan Sets Lahore",
+    "Premium Rings & Earrings Pakistan",
+    "Luxella PK",
   ],
 };
 
