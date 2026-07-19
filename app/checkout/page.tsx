@@ -68,6 +68,7 @@ export default function CheckoutPage() {
   // EasyPaisa States
   const [epWalletNumber, setEpWalletNumber] = useState("");
   const [epTxnId, setEpTxnId] = useState("");
+  const [upgradeGift, setUpgradeGift] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -119,7 +120,7 @@ export default function CheckoutPage() {
     return null;
   }
 
-  const grandTotal = cartTotal + shippingFee;
+  const grandTotal = cartTotal + shippingFee + (upgradeGift ? 499 : 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,14 +180,27 @@ export default function CheckoutPage() {
           address,
           city,
         },
-        items: cart.map((item) => ({
-          productId: item.product.id,
-          name: item.product.name,
-          price: item.product.price,
-          quantity: item.quantity,
-          image: item.product.image,
-        })),
-        subtotal: cartTotal,
+        items: [
+          ...cart.map((item) => ({
+            productId: item.product.id,
+            name: item.product.name,
+            price: item.product.price,
+            quantity: item.quantity,
+            image: item.product.image,
+          })),
+          ...(upgradeGift
+            ? [
+                {
+                  productId: 9999,
+                  name: "Signature Premium Gift Package (Box + Ribbon + calligraphic Card)",
+                  price: 499,
+                  quantity: 1,
+                  image: "/images/products/product2.jpg",
+                },
+              ]
+            : []),
+        ],
+        subtotal: cartTotal + (upgradeGift ? 499 : 0),
         shipping: shippingFee,
         total: grandTotal,
         paymentMethod: displayPaymentMethod,
@@ -731,6 +745,48 @@ export default function CheckoutPage() {
                 ))}
               </div>
 
+              {/* Premium Packaging Upsell */}
+              <div
+                className="rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden"
+                style={{
+                  background: upgradeGift ? "rgba(200,169,106,0.05)" : "rgba(255,255,255,0.01)",
+                  borderColor: upgradeGift ? "#C8A96A" : "rgba(200,169,106,0.12)",
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setUpgradeGift(!upgradeGift)}
+                  className="flex items-start gap-3 text-left w-full cursor-pointer group"
+                >
+                  <div
+                    className="w-5 h-5 rounded-md border flex items-center justify-center transition-all flex-shrink-0 mt-0.5"
+                    style={{
+                      borderColor: upgradeGift ? "#C8A96A" : "rgba(255,255,255,0.2)",
+                      background: upgradeGift ? "linear-gradient(135deg, #C8A96A, #8B6914)" : "transparent",
+                    }}
+                  >
+                    {upgradeGift && (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                        <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs font-bold text-white group-hover:text-[#C8A96A] transition-colors">
+                        🎁 Upgrade to Premium Gift Package
+                      </p>
+                      <span className="text-[9px] font-bold text-[#C8A96A] bg-[#C8A96A]/10 px-2 py-0.5 rounded">
+                        + Rs. 499
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mt-1 leading-normal">
+                      Includes a custom velvet-lined gold embossed box, silk wrapping, and a handwritten calligraphy greeting card.
+                    </p>
+                  </div>
+                </button>
+              </div>
+
               {/* Subtotal & Delivery Costs */}
               <div className="space-y-3.5 text-xs border-t pt-4" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
                 <div className="flex justify-between font-medium">
@@ -750,6 +806,13 @@ export default function CheckoutPage() {
                     )}
                   </span>
                 </div>
+
+                {upgradeGift && (
+                  <div className="flex justify-between font-medium">
+                    <span style={{ color: "var(--text-secondary)" }}>🎁 Premium Gift Package</span>
+                    <span style={{ color: "var(--text-primary)" }}>Rs. 499</span>
+                  </div>
+                )}
 
                 {settings?.taxRate > 0 && (
                   <div className="flex justify-between font-medium">
