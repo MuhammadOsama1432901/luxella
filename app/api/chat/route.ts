@@ -1,46 +1,52 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getProducts } from "@/lib/db";
 import OpenAI from "openai";
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY || "dummy-key-for-build",
 });
 
-const SYSTEM_PROMPT = `You are Lexa, the friendly and knowledgeable AI shopping assistant for Luxella — a premium artificial jewelry brand based in Pakistan.
-
-Your role:
-- Help customers find the perfect jewelry pieces (necklaces, earrings, rings, bracelets)
-- Answer questions about materials, care, sizing, and styling
-- Assist with order tracking, returns, and shipping queries
-- Suggest products based on customer preferences, occasions, or budget
-- Be warm, elegant, and on-brand for a luxury jewelry experience
-
-About Luxella:
-- Premium artificial / fashion jewelry brand
-- Products: Necklaces, Earrings, Rings, Bracelets
-- Materials: High-grade hypoallergenic metals, premium zirconia stones, gold and silver plating
-- Shipping: All across Pakistan, 3–5 business days
-- Support: osamaafzal1432901@gmail.com | Call/Message: +92 349 5804586
-- Return policy: Hassle-free returns and exchanges
-- Price range: Affordable luxury — beautiful jewelry at accessible prices
-- Showroom: Factory No 51, Model Town, Islamabad, Pakistan. Open Mon–Sat 10AM–8PM
-
-Guidelines:
-- Keep responses concise (2–4 sentences max unless more detail is needed)
-- Use a warm, sophisticated, slightly poetic tone that matches the luxury brand
-- When suggesting products, guide them to /shop page or specific categories like /shop?category=Necklaces
-- If asked about a specific product you don't have data on, recommend visiting the shop page
-- Always end with a helpful follow-up question or offer to help further
-- Use occasional jewelry/gem emojis (💎✨💍) but sparingly and elegantly
-- Never make up specific product names, stock levels, or prices`;
-
 export async function POST(req: NextRequest) {
   try {
     const { messages } = await req.json();
 
+    // Fetch dynamic products from the local DB to give Lexa full catalog context
+    const dbProducts = await getProducts().catch(() => []);
+    const productCatalogText = dbProducts
+      .map((p) => `- ${p.name}: Rs. ${p.price.toLocaleString()} (Category: ${p.category}, ID: ${p.id})`)
+      .join("\n");
+
+    const SYSTEM_PROMPT = `You are Lexa, the friendly and knowledgeable AI shopping stylist for Luxella — a premium artificial jewelry brand based in Pakistan.
+
+Your role:
+- Help customers find the perfect jewelry pieces (necklaces, earrings, rings, bracelets)
+- Recommend items from our live catalog (listed below) based on customer preferences, occasions, or budget
+- Answer questions about materials, care, sizing, and styling
+- Assist with shipping, returns, and contact queries
+- Suggest products using links, e.g. for a specific product guide them to '/product/[ID]' (e.g. '/product/1' for Luxury Gold Necklace) or category pages like '/shop?category=Necklaces'
+
+Our Live Product Catalog:
+${productCatalogText || "- No items currently loaded"}
+
+About Luxella:
+- Premium artificial / fashion jewelry brand
+- Materials: High-grade hypoallergenic metals, premium zirconia stones, 24K gold and sterling silver plating
+- Shipping: All across Pakistan, 3–5 business days
+- Support: osamaafzal1432901@gmail.com | WhatsApp/Call: +92 349 5804586
+- Return policy: 7-day hassle-free returns and exchanges
+- Showroom Location: Factory No 51, Model Town, Islamabad, Pakistan (Mon–Sat 10AM–8PM)
+
+Guidelines:
+- Keep responses elegant, warm, and concise (2–4 sentences max)
+- Use a sophisticated tone fitting for a luxury boutique
+- If asked about a product not in our catalog, recommend visiting '/shop' to see our latest arrivals
+- When recommending a catalog product, always include its price and link to its specific product page (e.g., [Product Name](/product/ID)) so the user can easily view and purchase it
+- Use occasional emojis (💎✨💍) but sparingly and elegantly`;
+
     if (!process.env.OPENAI_API_KEY) {
-      // Fallback smart responses when no API key is set
+      // Fallback response with catalog-aware suggestions
       return NextResponse.json({
-        message: getFallbackResponse(messages[messages.length - 1]?.content || ""),
+        message: getFallbackResponse(messages[messages.length - 1]?.content || "", dbProducts),
       });
     }
 
@@ -48,7 +54,7 @@ export async function POST(req: NextRequest) {
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
-        ...messages.slice(-10), // Keep last 10 messages for context
+        ...messages.slice(-10),
       ],
       max_tokens: 300,
       temperature: 0.7,
@@ -59,31 +65,42 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ message });
   } catch (error) {
     console.error("Chat API error:", error);
-    // Return a fallback response on error
     const lastMessage = (await req.clone().json().catch(() => ({ messages: [] }))).messages?.slice(-1)[0]?.content || "";
     return NextResponse.json({
-      message: getFallbackResponse(lastMessage),
+      message: getFallbackResponse(lastMessage, []),
     });
   }
 }
 
-function getFallbackResponse(userMessage: string): string {
+function getFallbackResponse(userMessage: string, dbProducts: any[]): string {
   const msg = userMessage.toLowerCase();
+
+  const getProductSug = (cat: string) => {
+    const matched = dbProducts.find((p) => p.category?.toLowerCase() === cat.toLowerCase());
+    if (matched) {
+      return `Our top recommendation is the [${matched.name}](/product/${matched.id}) for Rs. ${matched.price.toLocaleString()}.`;
+    }
+    return "";
+  };
 
   if (msg.includes("hello") || msg.includes("hi") || msg.includes("hey") || msg === "") {
     return "Hello, beautiful! 💎 I'm Lexa, your personal Luxella stylist. Whether you're looking for a statement necklace, elegant earrings, or the perfect gift — I'm here to help. What are you looking for today?";
   }
   if (msg.includes("necklace")) {
-    return "Our necklaces are crafted to perfection ✨ From delicate chains to bold statement pieces, we have something for every style. Visit /shop?category=Necklaces to explore. Would you like help finding something for a specific occasion?";
+    const sug = getProductSug("Necklaces");
+    return `Our necklaces are crafted to perfection ✨ From delicate chains to bold statement pieces, we have something for every style. ${sug} Visit /shop?category=Necklaces to explore. Would you like help finding something for a specific occasion?`;
   }
   if (msg.includes("earring")) {
-    return "Our earring collection is simply stunning 💍 We carry studs, drops, hoops, and chandeliers — all hypoallergenic and beautifully crafted. Browse them at /shop?category=Earrings. Any particular style in mind?";
+    const sug = getProductSug("Earrings");
+    return `Our earring collection is simply stunning 💍 We carry studs, drops, hoops, and chandeliers — all hypoallergenic and beautifully crafted. ${sug} Browse them at /shop?category=Earrings. Any particular style in mind?`;
   }
   if (msg.includes("ring")) {
-    return "Our rings range from minimalist bands to dazzling statement pieces ✨ All feature premium zirconia stones and durable gold/silver plating. Check them out at /shop?category=Rings!";
+    const sug = getProductSug("Rings");
+    return `Our rings range from minimalist bands to dazzling statement pieces ✨ All feature premium zirconia stones and durable gold/silver plating. ${sug} Check them out at /shop?category=Rings!`;
   }
   if (msg.includes("bracelet")) {
-    return "Our bracelets are the perfect finishing touch 💎 From delicate chains to bold cuffs, each piece is crafted to elevate any outfit. Explore at /shop?category=Bracelets. Can I help you find a specific style?";
+    const sug = getProductSug("Bracelets");
+    return `Our bracelets are the perfect finishing touch 💎 From delicate chains to bold cuffs, each piece is crafted to elevate any outfit. ${sug} Explore at /shop?category=Bracelets. Can I help you find a specific style?`;
   }
   if (msg.includes("price") || msg.includes("cost") || msg.includes("how much") || msg.includes("budget")) {
     return "Luxella offers affordable luxury — our pieces are priced to give you the look and feel of fine jewelry without breaking the bank. Visit our /shop page to see the full range. Is there a specific budget I can help you work within?";
@@ -101,7 +118,7 @@ function getFallbackResponse(userMessage: string): string {
     return "Luxella jewelry makes the most thoughtful gift! 💍 For weddings, our necklace and earring sets are stunning. For birthdays, a personalized ring or bracelet is always special. Would you like help picking the perfect piece?";
   }
   if (msg.includes("contact") || msg.includes("support") || msg.includes("help") || msg.includes("phone") || msg.includes("location") || msg.includes("address") || msg.includes("where")) {
-    return "Our team is ready to help! 💎 Visit our showroom at Factory No 51, Model Town, Islamabad. Email us at osamaafzal1432901@gmail.com or call +92 349 5804586. Open Mon–Sat, 10AM–8PM.";
+    return "Our team is ready to help! 💎 Visit our showroom at Factory No 51, Model Town, Islamabad. Email us at osamaafzal1432901@gmail.com or WhatsApp/Call +92 349 5804586. Open Mon–Sat, 10AM–8PM.";
   }
   if (msg.includes("care") || msg.includes("clean") || msg.includes("maintain")) {
     return "To keep your Luxella jewelry radiant ✨ avoid contact with water, perfume, and chemicals. Store in a soft pouch or box when not wearing. Wipe gently with a soft dry cloth to restore shine. Is there anything else I can help with?";
