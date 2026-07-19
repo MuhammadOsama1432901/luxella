@@ -30,8 +30,9 @@ import {
   Move,
   RotateCcw,
   Maximize2,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
-
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Placement {
@@ -43,16 +44,15 @@ interface Placement {
 
 // ── AI Loading messages ───────────────────────────────────────────────────────
 const AI_MESSAGES = [
-  "Analyzing your photo...",
-  "Detecting body landmarks...",
-  "Measuring proportions...",
-  "Detecting skin tone...",
-  "Matching jewelry scale...",
-  "Applying realistic lighting...",
-  "Calculating perspective...",
-  "Blending jewelry naturally...",
-  "Generating perfect fit...",
-  "Almost done...",
+  "Loading MediaPipe Hand models...",
+  "Analyzing your photo structure...",
+  "Detecting hand & wrist landmarks...",
+  "Measuring wrist proportions...",
+  "Calculating perspective angle...",
+  "Applying volumetric 3D cylinder wrapping...",
+  "Generating realistic shadows...",
+  "Blending metallic light reflections...",
+  "Almost ready...",
 ];
 
 // ── Default placements (client-side fallback) ─────────────────────────────────
@@ -60,14 +60,14 @@ const PLACEMENT_DEFAULTS: Record<JewelryCategory, Placement[]> = {
   necklace: [{ x: 0.50, y: 0.52, width: 0.55, rotation: 0 }],
   earring:  [{ x: 0.35, y: 0.44, width: 0.07, rotation: 0 }, { x: 0.65, y: 0.44, width: 0.07, rotation: 0 }],
   ring:     [{ x: 0.60, y: 0.62, width: 0.13, rotation: -10 }],
-  bracelet: [{ x: 0.50, y: 0.52, width: 0.38, rotation: 0 }],
-  watch:    [{ x: 0.50, y: 0.52, width: 0.38, rotation: 0 }],
+  bracelet: [{ x: 0.50, y: 0.62, width: 0.28, rotation: 0 }],
+  watch:    [{ x: 0.50, y: 0.62, width: 0.28, rotation: 0 }],
   anklet:   [{ x: 0.50, y: 0.65, width: 0.40, rotation: 10 }],
   nosepin:  [{ x: 0.48, y: 0.50, width: 0.08, rotation: 0 }],
 };
 
-// ── Compress image to max 800px for fast API upload ───────────────────────────
-function compressImage(dataUrl: string, maxWidth = 800): Promise<string> {
+// ── Compress image to max 900px for fast processing ───────────────────────────
+function compressImage(dataUrl: string, maxWidth = 900): Promise<string> {
   return new Promise((resolve) => {
     const img = new window.Image();
     img.onload = () => {
@@ -77,7 +77,7 @@ function compressImage(dataUrl: string, maxWidth = 800): Promise<string> {
       canvas.height = Math.round(img.height * ratio);
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/jpeg", 0.82));
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
     };
     img.src = dataUrl;
   });
@@ -88,7 +88,7 @@ export default function TryOnStudio() {
   const { addToCart } = useCart();
   const router = useRouter();
 
-  // Load real products from the database forTry-On e-commerce integration
+  // Load real products from the database for Try-On integration
   const [dbProducts, setDbProducts] = useState<any[]>([]);
 
   useEffect(() => {
@@ -97,7 +97,7 @@ export default function TryOnStudio() {
         const res = await fetch("/api/products");
         if (res.ok) {
           const data = await res.json();
-          setDbProducts(data);
+          setDbProducts(data.products || []);
         }
       } catch (err) {
         console.error("Failed to load products for try-on mapping:", err);
@@ -123,7 +123,6 @@ export default function TryOnStudio() {
       if (found) return found;
     }
     
-    // Fallback object matching Product type
     return {
       id: parseFloat(item.id.replace(/\D/g, "") || "1") + 100,
       name: item.name,
@@ -138,17 +137,24 @@ export default function TryOnStudio() {
     };
   }, [dbProducts]);
 
-  // ── Core state ─────────────────────────────────────────────────────────────
+  // ── Core states ─────────────────────────────────────────────────────────────
   const [userImage,     setUserImage]     = useState<string | null>(null);
   const [category,      setCategory]      = useState<JewelryCategory>("necklace");
   const [selected,      setSelected]      = useState<JewelryItem>(JEWELRY_BY_CATEGORY["necklace"][0]);
   const [placements,    setPlacements]    = useState<Placement[] | null>(null);
   const [detectedCat,   setDetectedCat]   = useState<JewelryCategory | null>(null);
+  
+  // Custom uploaded jewelry list
+  const [customJewelry, setCustomJewelry] = useState<Record<JewelryCategory, JewelryItem[]>>({
+    necklace: [], earring: [], ring: [], bracelet: [], watch: [], anklet: [], nosepin: []
+  });
 
-  // ── Processing ─────────────────────────────────────────────────────────────
+  // ── Processing & Model states ────────────────────────────────────────────────
   const [isProcessing,  setIsProcessing]  = useState(false);
   const [msgIndex,      setMsgIndex]      = useState(0);
   const [progress,      setProgress]      = useState(0);
+  const [landmarker,    setLandmarker]    = useState<any>(null);
+  const [isModelLoading, setIsModelLoading] = useState(false);
 
   // ── UI phase: "upload" | "pick" | "result" ─────────────────────────────────
   const [phase, setPhase] = useState<"upload" | "pick" | "result">("upload");
@@ -160,15 +166,45 @@ export default function TryOnStudio() {
   const [rotation,     setRotation]       = useState(0);
   const [scale,        setScale]          = useState(1.0);
 
-  // ── Before/After slider ────────────────────────────────────────────────────
+  // ── Before/After & Drag states ──────────────────────────────────────────────
   const [sliderPos, setSliderPos]         = useState(0.5);
-  const isDragging                        = useRef(false);
+  const [isDraggingSlider, setIsDraggingSlider] = useState(false);
+  const [isDraggingJewelry, setIsDraggingJewelry] = useState(false);
 
   // ── Refs ────────────────────────────────────────────────────────────────────
-  const fileInputRef  = useRef<HTMLInputElement>(null);
-  const camInputRef   = useRef<HTMLInputElement>(null);
-  const canvasRef     = useRef<HTMLCanvasElement>(null);
-  const containerRef  = useRef<HTMLDivElement>(null);
+  const fileInputRef       = useRef<HTMLInputElement>(null);
+  const camInputRef        = useRef<HTMLInputElement>(null);
+  const customJewelryRef   = useRef<HTMLInputElement>(null);
+  const canvasRef          = useRef<HTMLCanvasElement>(null);
+  const containerRef       = useRef<HTMLDivElement>(null);
+  const dragStartRef       = useRef({ x: 0, y: 0, startOffsetX: 0, startOffsetY: 0 });
+
+  // ── Load MediaPipe Hand Landmarker dynamically on mount ─────────────────────
+  useEffect(() => {
+    async function loadMediaPipe() {
+      setIsModelLoading(true);
+      try {
+        const { FilesetResolver, HandLandmarker } = await import("@mediapipe/tasks-vision");
+        const vision = await FilesetResolver.forVisionTasks(
+          "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.8/wasm"
+        );
+        const marker = await HandLandmarker.createFromOptions(vision, {
+          baseOptions: {
+            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task",
+            delegate: "GPU",
+          },
+          runningMode: "IMAGE",
+          numHands: 1,
+        });
+        setLandmarker(marker);
+      } catch (err) {
+        console.error("Failed to load MediaPipe Hand Landmarker:", err);
+      } finally {
+        setIsModelLoading(false);
+      }
+    }
+    loadMediaPipe();
+  }, []);
 
   // ── Reset everything ────────────────────────────────────────────────────────
   const handleReset = useCallback(() => {
@@ -206,6 +242,38 @@ export default function TryOnStudio() {
     if (f) handleImageFile(f);
   }
 
+  // ── Handle custom jewelry upload ────────────────────────────────────────────
+  function onCustomJewelryUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/png")) {
+      toast.error("Please upload a transparent PNG for the best try-on experience.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      const customItem: JewelryItem = {
+        id: `custom-${Date.now()}`,
+        name: file.name.replace(/\.[^/.]+$/, ""), // remove extension
+        price: "Bespoke Design",
+        category: category,
+        src: dataUrl,
+        description: "User-uploaded transparent accessory",
+      };
+
+      setCustomJewelry((prev) => ({
+        ...prev,
+        [category]: [...prev[category], customItem],
+      }));
+      setSelected(customItem);
+      toast.success("Custom accessory loaded successfully!");
+    };
+    reader.readAsDataURL(file);
+  }
+
   // ── Drag & drop handlers ───────────────────────────────────────────────────
   function onDrop(e: React.DragEvent<HTMLDivElement>) {
     e.preventDefault();
@@ -214,8 +282,8 @@ export default function TryOnStudio() {
   }
 
   // ── Generate AI Try-On ─────────────────────────────────────────────────────
-  const runGeneration = useCallback(async (img: string, item: JewelryItem) => {
-    if (!img) return;
+  const runGeneration = useCallback(async (imgUrl: string, item: JewelryItem) => {
+    if (!imgUrl) return;
     setIsProcessing(true);
     setMsgIndex(0);
     setProgress(0);
@@ -226,7 +294,7 @@ export default function TryOnStudio() {
     }, 700);
 
     // Progress bar animation
-    const totalMs = 4500;
+    const totalMs = 4000;
     const tick = 80;
     let elapsed = 0;
     const progTimer = setInterval(() => {
@@ -236,51 +304,112 @@ export default function TryOnStudio() {
 
     try {
       // Compress image first
-      const compressed = await compressImage(img, 800);
+      const compressed = await compressImage(imgUrl, 900);
 
-      const res = await fetch("/api/try-on", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          imageBase64: compressed,
-          jewelryType: item.category,
-        }),
+      // Load image object to run MediaPipe on client side
+      const tempImg = new window.Image();
+      tempImg.crossOrigin = "anonymous";
+      
+      const mpResultPromise = new Promise<any>((resolve) => {
+        tempImg.onload = () => {
+          if (landmarker && item.category === "bracelet") {
+            try {
+              const mpData = landmarker.detect(tempImg);
+              resolve(mpData);
+            } catch (err) {
+              console.error("MediaPipe detection error:", err);
+              resolve(null);
+            }
+          } else {
+            resolve(null);
+          }
+        };
+        tempImg.onerror = () => resolve(null);
+        tempImg.src = compressed;
       });
+
+      // Run MediaPipe and standard vision detection concurrently
+      const [mpData, apiRes] = await Promise.all([
+        mpResultPromise,
+        fetch("/api/try-on", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            imageBase64: compressed,
+            jewelryType: item.category,
+          }),
+        }).then((res) => (res.ok ? res.json() : null)).catch(() => null),
+      ]);
 
       clearInterval(msgTimer);
       clearInterval(progTimer);
-
-      if (!res.ok) throw new Error("API error");
-      const data = await res.json();
-
       setProgress(100);
 
-      // AI returned detected category
-      if (data.category) {
-        const cat = data.category as JewelryCategory;
-        setDetectedCat(cat);
-        // Switch to the detected category and keep the chosen item if it matches; otherwise reset
-        if (cat !== item.category) {
-          setCategory(cat);
-          setSelected(JEWELRY_BY_CATEGORY[cat][0]);
+      // ── MediaPipe Hand Landmark Placement mapping ───────────────────────────
+      if (item.category === "bracelet" && mpData && mpData.landmarks && mpData.landmarks.length > 0) {
+        const hand = mpData.landmarks[0];
+        const wrist = hand[0];
+        const middleKnuckle = hand[9];
+        const pinkyBase = hand[17];
+        const indexBase = hand[5];
+
+        // 1. Calculate wrist tilt angle (perpendicular to center hand axis)
+        const dx = middleKnuckle.x - wrist.x;
+        const dy = middleKnuckle.y - wrist.y;
+        const handAngleRad = Math.atan2(dy, dx);
+        const wristAngleDeg = ((handAngleRad + Math.PI / 2) * 180) / Math.PI;
+
+        // 2. Estimate wrist width scale relative to hand scale
+        const distPinky = Math.hypot(pinkyBase.x - wrist.x, pinkyBase.y - wrist.y);
+        const distIndex = Math.hypot(indexBase.x - wrist.x, indexBase.y - wrist.y);
+        const estimatedWristWidth = (distPinky + distIndex) * 0.76;
+
+        // Place bracelet slightly above landmark 0 (wrist) towards the palm
+        const wristCenterX = wrist.x + dx * 0.08;
+        const wristCenterY = wrist.y + dy * 0.08;
+
+        setPlacements([
+          {
+            x: wristCenterX,
+            y: wristCenterY,
+            width: estimatedWristWidth,
+            rotation: wristAngleDeg,
+          },
+        ]);
+        setDetectedCat("bracelet");
+        toast.success("AI detected wrist perfectly!");
+      } 
+      // ── API Vision Fallback ────────────────────────────────────────────────
+      else if (apiRes && apiRes.placements) {
+        if (apiRes.category) {
+          setDetectedCat(apiRes.category);
+          if (apiRes.category !== item.category) {
+            setCategory(apiRes.category);
+            const baseCatList = JEWELRY_BY_CATEGORY[apiRes.category as JewelryCategory] || [];
+            setSelected(baseCatList[0] || item);
+          }
         }
+        setPlacements(apiRes.placements);
+      } 
+      // ── Static Fallback ────────────────────────────────────────────────────
+      else {
+        setPlacements(PLACEMENT_DEFAULTS[item.category]);
+        toast.info("Fallback placement applied.");
       }
 
-      setPlacements(data.placements ?? PLACEMENT_DEFAULTS[item.category]);
       setPhase("result");
-    } catch {
+    } catch (err) {
+      console.error(err);
       clearInterval(msgTimer);
       clearInterval(progTimer);
       setProgress(100);
       setPlacements(PLACEMENT_DEFAULTS[item.category]);
       setPhase("result");
-      toast.error("AI detection used fallback placement.", {
-        style: { background: "#111", color: "#C8A96A", border: "1px solid rgba(200,169,106,0.3)" },
-      });
+      toast.error("Using default manual placement.");
     } finally {
       setIsProcessing(false);
     }
-  }, []);
+  }, [landmarker]);
 
   function handleGenerate() {
     if (userImage) runGeneration(userImage, selected);
@@ -294,7 +423,7 @@ export default function TryOnStudio() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected.id]);
 
-  // ── Canvas draw ─────────────────────────────────────────────────────────────
+  // ── Canvas draw (Volumetric 3D Cylinder Wrap Renderer) ──────────────────────
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     if (!canvas || !userImage || !placements) return;
@@ -308,10 +437,10 @@ export default function TryOnStudio() {
       canvas.width  = Math.round(userImg.width  * ratio);
       canvas.height = Math.round(userImg.height * ratio);
 
-      // Draw user photo
+      // 1. Draw user background photo
       ctx.drawImage(userImg, 0, 0, canvas.width, canvas.height);
 
-      // Draw each jewelry piece
+      // 2. Draw each jewelry piece
       const jImg = new window.Image();
       jImg.onload = () => {
         placements.forEach((p) => {
@@ -324,22 +453,104 @@ export default function TryOnStudio() {
           ctx.translate(cx, cy);
           ctx.rotate(((p.rotation + rotation) * Math.PI) / 180);
 
-          // Realistic shadow
-          ctx.shadowColor = "rgba(0,0,0,0.35)";
-          ctx.shadowBlur  = 14;
-          ctx.shadowOffsetX = 2;
-          ctx.shadowOffsetY = 6;
+          // ── Volumetric Cylinder Wrap for Bracelet / Watch ─────────────────
+          if (selected.category === "bracelet" || selected.category === "watch") {
+            const N = 64; // number of vertical strips for smooth rendering
+            const sW = jImg.width;
+            const sH = jImg.height;
+            const sliceSW = sW / N;
 
-          ctx.globalAlpha = 0.95;
-          ctx.drawImage(jImg, -w / 2, -h / 2, w, h);
+            // Perspective Curvature (creates elliptical cylinder illusion)
+            const curvature = 0.22; 
+
+            // A. Draw Curved Drop Shadow first
+            ctx.save();
+            ctx.shadowColor = "rgba(0, 0, 0, 0.42)";
+            ctx.shadowBlur = 16;
+            ctx.shadowOffsetX = 1;
+            ctx.shadowOffsetY = 8;
+            ctx.beginPath();
+            for (let i = 0; i <= N; i++) {
+              const r = i / N;
+              const angle = -Math.PI / 2 + r * Math.PI;
+              const x_proj = Math.sin(angle);
+              const z_proj = Math.cos(angle);
+              
+              const sx = x_proj * (w / 2);
+              const sy = (1 - z_proj) * curvature * (w / 2);
+              
+              if (i === 0) ctx.moveTo(sx, sy);
+              else ctx.lineTo(sx, sy);
+            }
+            ctx.lineWidth = h * 0.95;
+            ctx.strokeStyle = "rgba(0,0,0,0.55)";
+            ctx.lineCap = "round";
+            ctx.stroke();
+            ctx.restore();
+
+            // B. Draw Foreshortened Slices
+            for (let i = 0; i < N; i++) {
+              const r = i / N;
+              const angle = -Math.PI / 2 + r * Math.PI;
+              
+              const x_proj = Math.sin(angle);
+              const z_proj = Math.cos(angle); // Depth factor (1 at front center, 0 at sides)
+              
+              const sx = x_proj * (w / 2);
+              const sy = (1 - z_proj) * curvature * (w / 2);
+              
+              // Squeeze slice horizontal width near the edges (foreshortening)
+              const sliceW = (w / 2) * Math.cos(angle) * (Math.PI / N) * 1.08;
+              
+              // Scale height based on depth (closest is slightly thicker)
+              const sliceH = h * (0.94 + 0.06 * z_proj);
+              const sourceX = i * sliceSW;
+
+              ctx.save();
+              ctx.translate(sx, sy);
+              
+              ctx.globalAlpha = 0.98;
+              ctx.drawImage(
+                jImg,
+                sourceX,
+                0,
+                sliceSW,
+                sH,
+                -sliceW / 2,
+                -sliceH / 2,
+                sliceW,
+                sliceH
+              );
+
+              // C. Dynamic Side Shading (creates 3D volume/lighting)
+              const sideFactor = 1 - z_proj; // 0 at center, 1 at edges
+              if (sideFactor > 0.05) {
+                ctx.fillStyle = `rgba(0, 0, 0, ${sideFactor * 0.45})`;
+                ctx.globalCompositeOperation = "source-atop";
+                ctx.fillRect(-sliceW / 2, -sliceH / 2, sliceW, sliceH);
+              }
+
+              ctx.restore();
+            }
+          } 
+          // ── Flat Overlay (Necklaces / Earrings / Nosepins) ──────────────────
+          else {
+            ctx.shadowColor = "rgba(0,0,0,0.35)";
+            ctx.shadowBlur  = 14;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 6;
+            ctx.globalAlpha = 0.95;
+            ctx.drawImage(jImg, -w / 2, -h / 2, w, h);
+          }
+
           ctx.restore();
         });
 
-        // Before/After divider
+        // 3. Before/After Split comparison slider
         if (sliderPos < 0.99) {
           const divX = canvas.width * sliderPos;
 
-          // Left side (original) — overwrite with original photo clipped
+          // Clip left side with original background
           ctx.save();
           ctx.beginPath();
           ctx.rect(0, 0, divX, canvas.height);
@@ -347,20 +558,24 @@ export default function TryOnStudio() {
           ctx.drawImage(userImg, 0, 0, canvas.width, canvas.height);
           ctx.restore();
 
-          // Divider line
+          // Divider bar
           ctx.save();
           ctx.strokeStyle = "#C8A96A";
-          ctx.lineWidth = 2.5;
+          ctx.lineWidth = 3;
           ctx.beginPath();
           ctx.moveTo(divX, 0);
           ctx.lineTo(divX, canvas.height);
           ctx.stroke();
 
-          // Handle circle
+          // Gold Handle circle
           ctx.beginPath();
-          ctx.arc(divX, canvas.height / 2, 16, 0, Math.PI * 2);
+          ctx.arc(divX, canvas.height / 2, 18, 0, Math.PI * 2);
           ctx.fillStyle = "#C8A96A";
           ctx.fill();
+          ctx.strokeStyle = "#111";
+          ctx.lineWidth = 1;
+          ctx.stroke();
+          
           ctx.fillStyle = "#111";
           ctx.font = "bold 13px sans-serif";
           ctx.textAlign = "center";
@@ -378,13 +593,55 @@ export default function TryOnStudio() {
     if (phase === "result") drawCanvas();
   }, [phase, drawCanvas]);
 
-  // ── Before/After slider ─────────────────────────────────────────────────────
-  function updateSlider(clientX: number) {
-    if (!containerRef.current) return;
+  // ── Drag & Swipe Interaction Manager ───────────────────────────────────────
+  const getCoordinates = (clientX: number, clientY: number) => {
+    if (!containerRef.current) return { x: 0, y: 0, width: 0 };
     const rect = containerRef.current.getBoundingClientRect();
-    const x = Math.max(0.01, Math.min(0.99, (clientX - rect.left) / rect.width));
-    setSliderPos(x);
-  }
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top,
+      width: rect.width,
+    };
+  };
+
+  const handleDragStart = (clientX: number, clientY: number) => {
+    const coords = getCoordinates(clientX, clientY);
+    const sliderLineX = coords.width * sliderPos;
+
+    // A. Drag Before/After slider if cursor is close to the dividing line
+    if (Math.abs(coords.x - sliderLineX) < 30) {
+      setIsDraggingSlider(true);
+    } 
+    // B. Otherwise, drag-to-adjust jewelry coordinates directly
+    else {
+      setIsDraggingJewelry(true);
+      dragStartRef.current = {
+        x: clientX,
+        y: clientY,
+        startOffsetX: offsetX,
+        startOffsetY: offsetY,
+      };
+    }
+  };
+
+  const handleDragMove = (clientX: number, clientY: number) => {
+    if (isDraggingSlider) {
+      if (!containerRef.current) return;
+      const rect = containerRef.current.getBoundingClientRect();
+      const pos = Math.max(0.01, Math.min(0.99, (clientX - rect.left) / rect.width));
+      setSliderPos(pos);
+    } else if (isDraggingJewelry) {
+      const dx = clientX - dragStartRef.current.x;
+      const dy = clientY - dragStartRef.current.y;
+      setOffsetX(dragStartRef.current.startOffsetX + dx);
+      setOffsetY(dragStartRef.current.startOffsetY + dy);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setIsDraggingSlider(false);
+    setIsDraggingJewelry(false);
+  };
 
   function handleAddToCart() {
     const dbProd = getMappedDbProduct(selected);
@@ -404,7 +661,7 @@ export default function TryOnStudio() {
     const c = canvasRef.current;
     if (!c) return;
     const a = document.createElement("a");
-    a.download = `luxella-${selected.name.toLowerCase().replace(/\s+/g, "-")}.png`;
+    a.download = `luxella-fitting-${selected.name.toLowerCase().replace(/\s+/g, "-")}.png`;
     a.href = c.toDataURL("image/png");
     a.click();
   }
@@ -415,13 +672,14 @@ export default function TryOnStudio() {
     });
   }
 
-  const items = JEWELRY_BY_CATEGORY[category];
+  const categoryItems = JEWELRY_BY_CATEGORY[category] || [];
+  const customItemsForCategory = customJewelry[category] || [];
+  const allItems = [...customItemsForCategory, ...categoryItems];
 
-  // ────────────────────────────────────────────────────────────────────────────
   return (
     <section
       style={{ background: "var(--bg-base)" }}
-      className="min-h-screen py-14 px-4 md:px-8"
+      className="min-h-screen py-14 px-4 md:px-8 relative"
     >
       <div className="max-w-5xl mx-auto space-y-10">
 
@@ -440,9 +698,19 @@ export default function TryOnStudio() {
             Try On <span style={{ color: "#C8A96A" }}>Any Piece</span>
           </h1>
           <p className="mt-3 text-sm text-gray-400 max-w-md mx-auto">
-            Upload a photo. Pick your jewelry. Our AI does the rest — perfectly fitted in seconds.
+            Upload a photo. Pick your jewelry. Our MediaPipe computer vision fits & wraps it naturally.
           </p>
         </div>
+
+        {/* ── MODEL LOAD INDICATOR ────────────────────────────────────────── */}
+        {isModelLoading && (
+          <div className="max-w-sm mx-auto p-4 rounded-2xl border text-center flex items-center justify-center gap-3 bg-white/5 border-[#C8A96A]/20">
+            <Loader2 className="animate-spin text-[#C8A96A]" size={16} />
+            <span className="text-xs text-gray-300 font-bold uppercase tracking-wider">
+              Caching MediaPipe hand-tracker WASM...
+            </span>
+          </div>
+        )}
 
         {/* ── STEP INDICATORS ──────────────────────────────────────────────── */}
         <div className="flex items-center justify-center gap-4 select-none">
@@ -491,7 +759,6 @@ export default function TryOnStudio() {
               className="rounded-3xl p-8 border text-center space-y-6"
               style={{ background: "var(--bg-elevated)", borderColor: "rgba(200,169,106,0.18)" }}
             >
-              {/* Drop zone */}
               <div
                 onDrop={onDrop}
                 onDragOver={(e) => e.preventDefault()}
@@ -522,7 +789,6 @@ export default function TryOnStudio() {
                 </p>
               </div>
 
-              {/* Camera button */}
               <div className="flex items-center gap-3">
                 <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.06)" }} />
                 <span className="text-[10px] text-gray-600 uppercase tracking-wider">or</span>
@@ -552,10 +818,8 @@ export default function TryOnStudio() {
                 Use Camera
               </button>
 
-              {/* Tip */}
               <p className="text-[11px] text-gray-500 leading-relaxed px-2">
-                💡 Use a clear photo in good lighting for the most realistic results.
-                Works with selfies, hand shots, ankle photos, and more.
+                💡 Try taking a picture of your wrist flat on a tabletop for the best bracelet tracking simulation.
               </p>
             </div>
           </div>
@@ -566,8 +830,7 @@ export default function TryOnStudio() {
         ═══════════════════════════════════════════════════════════════════════ */}
         {phase === "pick" && (
           <div className="space-y-6">
-
-            {/* Uploaded photo preview + change */}
+            {/* Uploaded photo info banner */}
             <div
               className="flex items-center gap-4 rounded-2xl p-4 border"
               style={{ background: "var(--bg-elevated)", borderColor: "rgba(200,169,106,0.15)" }}
@@ -576,8 +839,8 @@ export default function TryOnStudio() {
                 <img src={userImage!} alt="Your photo" className="w-full h-full object-cover" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-bold text-sm">Photo ready</p>
-                <p className="text-gray-500 text-[11px] mt-0.5">AI will analyze and fit jewelry automatically</p>
+                <p className="text-white font-bold text-sm">Image Imported</p>
+                <p className="text-gray-500 text-[11px] mt-0.5">MediaPipe is ready to analyze landmarks</p>
               </div>
               <button
                 onClick={handleReset}
@@ -596,7 +859,10 @@ export default function TryOnStudio() {
                     key={cat.key}
                     onClick={() => {
                       setCategory(cat.key);
-                      setSelected(JEWELRY_BY_CATEGORY[cat.key][0]);
+                      const baseCatList = JEWELRY_BY_CATEGORY[cat.key] || [];
+                      const customCatList = customJewelry[cat.key] || [];
+                      const totalList = [...customCatList, ...baseCatList];
+                      setSelected(totalList[0] || baseCatList[0]);
                     }}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[11px] font-bold uppercase tracking-wider flex-shrink-0 cursor-pointer transition-all duration-300 border"
                     style={
@@ -612,21 +878,42 @@ export default function TryOnStudio() {
               })}
             </div>
 
-            {/* Jewelry grid */}
+            {/* Accessory Selector Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {items.map((item) => {
+              {/* Card 1: Custom upload button */}
+              <div
+                onClick={() => customJewelryRef.current?.click()}
+                className="rounded-2xl p-4 text-center cursor-pointer transition-all duration-300 border border-dashed flex flex-col items-center justify-center gap-3 bg-white/5 border-[#C8A96A]/20 hover:border-[#C8A96A]/50"
+              >
+                <input
+                  ref={customJewelryRef}
+                  type="file"
+                  accept="image/png"
+                  className="hidden"
+                  onChange={onCustomJewelryUpload}
+                />
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[#C8A96A]/10 border border-[#C8A96A]/20">
+                  <ImageIcon size={20} style={{ color: "#C8A96A" }} />
+                </div>
+                <div>
+                  <p className="text-white text-xs font-bold">Custom PNG</p>
+                  <p className="text-[9px] text-gray-500 mt-0.5">Transparent bracelet</p>
+                </div>
+              </div>
+
+              {/* Render items */}
+              {allItems.map((item) => {
                 const isActive = selected.id === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => setSelected(item)}
-                    className="rounded-2xl p-4 text-left cursor-pointer transition-all duration-300 border flex flex-col gap-3"
+                    className="rounded-2xl p-4 text-left cursor-pointer transition-all duration-300 border flex flex-col gap-3 relative"
                     style={{
                       background: isActive ? "rgba(200,169,106,0.08)" : "var(--bg-elevated)",
                       borderColor: isActive ? "#C8A96A" : "rgba(255,255,255,0.06)",
                     }}
                   >
-                    {/* Jewelry image */}
                     <div
                       className="w-full aspect-square rounded-xl flex items-center justify-center overflow-hidden"
                       style={{ background: "rgba(255,255,255,0.03)" }}
@@ -638,13 +925,11 @@ export default function TryOnStudio() {
                       />
                     </div>
 
-                    {/* Info */}
                     <div>
-                      <p className="text-white text-[12px] font-bold leading-tight">{item.name}</p>
-                      <p className="text-[11px] mt-0.5" style={{ color: "#C8A96A" }}>{item.price}</p>
+                      <p className="text-white text-[12px] font-bold leading-tight truncate">{item.name}</p>
+                      <p className="text-[11px] mt-0.5 font-semibold" style={{ color: "#C8A96A" }}>{item.price}</p>
                     </div>
 
-                    {/* Selected check */}
                     {isActive && (
                       <div
                         className="absolute top-3 right-3 w-5 h-5 rounded-full flex items-center justify-center"
@@ -658,7 +943,7 @@ export default function TryOnStudio() {
               })}
             </div>
 
-            {/* Generate button */}
+            {/* Generate try on */}
             <button
               onClick={handleGenerate}
               className="w-full py-5 rounded-2xl font-bold text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-3 cursor-pointer transition-all duration-300 shadow-lg"
@@ -667,24 +952,21 @@ export default function TryOnStudio() {
                 color: "#111",
                 boxShadow: "0 8px 30px rgba(200,169,106,0.25)",
               }}
-              onMouseEnter={(e) => (e.currentTarget.style.boxShadow = "0 12px 40px rgba(200,169,106,0.4)")}
-              onMouseLeave={(e) => (e.currentTarget.style.boxShadow = "0 8px 30px rgba(200,169,106,0.25)")}
             >
               <Sparkles size={18} />
-              Generate AI Try-On
+              Fit with MediaPipe Tracking
             </button>
           </div>
         )}
 
         {/* ══════════════════════════════════════════════════════════════════════
-            LOADING OVERLAY (shown over phase transition)
+            LOADING SCREEN
         ═══════════════════════════════════════════════════════════════════════ */}
         {isProcessing && (
           <div
             className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-8 px-8 text-center"
             style={{ background: "rgba(8,8,8,0.97)" }}
           >
-            {/* Gold spinner */}
             <div className="relative">
               <div
                 className="w-24 h-24 rounded-full animate-spin"
@@ -696,12 +978,11 @@ export default function TryOnStudio() {
               />
               <Sparkles
                 size={28}
-                className="absolute inset-0 m-auto"
+                className="absolute inset-0 m-auto animate-pulse"
                 style={{ color: "#C8A96A" }}
               />
             </div>
 
-            {/* Rotating message */}
             <div className="space-y-2 max-w-xs">
               <p
                 key={msgIndex}
@@ -710,12 +991,11 @@ export default function TryOnStudio() {
               >
                 {AI_MESSAGES[msgIndex]}
               </p>
-              <p className="text-gray-500 text-xs uppercase tracking-widest">
-                AI Virtual Fitting — 3–6 seconds
+              <p className="text-gray-500 text-xs uppercase tracking-widest font-semibold">
+                Bespoke Fitting Room Engine
               </p>
             </div>
 
-            {/* Progress bar */}
             <div
               className="w-64 h-1 rounded-full overflow-hidden"
               style={{ background: "rgba(255,255,255,0.08)" }}
@@ -737,67 +1017,53 @@ export default function TryOnStudio() {
         {phase === "result" && !isProcessing && (
           <div className="space-y-6">
 
-            {/* Confidence badge */}
             <div className="flex items-center justify-between flex-wrap gap-3">
               <div
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider"
                 style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.2)" }}
               >
                 <Check size={13} />
-                AI Perfect Fit Generated
+                MediaPipe 3D Wrapped Rendered
               </div>
               {detectedCat && (
                 <div
                   className="text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-xl"
                   style={{ background: "rgba(200,169,106,0.08)", color: "#C8A96A", border: "1px solid rgba(200,169,106,0.15)" }}
                 >
-                  Category detected: {detectedCat}
+                  Target: {detectedCat}
                 </div>
               )}
             </div>
 
-            {/* Canvas preview */}
+            {/* Interactive Canvas */}
             <div
               ref={containerRef}
-              className="w-full rounded-3xl overflow-hidden relative border"
+              className="w-full rounded-3xl overflow-hidden relative border touch-none"
               style={{
                 background: "var(--bg-elevated)",
                 borderColor: "rgba(200,169,106,0.15)",
-                cursor: "ew-resize",
-                minHeight: 300,
-                touchAction: "none",
+                minHeight: 320,
               }}
-              onMouseDown={() => { isDragging.current = true; }}
-              onMouseMove={(e) => { if (isDragging.current) updateSlider(e.clientX); }}
-              onMouseUp={() => { isDragging.current = false; }}
-              onMouseLeave={() => { isDragging.current = false; }}
-              onTouchStart={() => { isDragging.current = true; }}
-              onTouchMove={(e) => {
-                isDragging.current = true;
-                updateSlider(e.touches[0].clientX);
-              }}
-              onTouchEnd={() => { isDragging.current = false; }}
+              onMouseDown={(e) => handleDragStart(e.clientX, e.clientY)}
+              onMouseMove={(e) => handleDragMove(e.clientX, e.clientY)}
+              onMouseUp={handleDragEnd}
+              onMouseLeave={handleDragEnd}
+              onTouchStart={(e) => handleDragStart(e.touches[0].clientX, e.touches[0].clientY)}
+              onTouchMove={(e) => handleDragMove(e.touches[0].clientX, e.touches[0].clientY)}
+              onTouchEnd={handleDragEnd}
             >
               <canvas
                 ref={canvasRef}
                 className="w-full h-auto block"
               />
-
-              {/* Auto re-fitting overlay */}
-              {isProcessing && (
-                <div className="absolute inset-0 bg-black/80 flex items-center justify-center gap-2 z-10">
-                  <Sparkles size={20} style={{ color: "#C8A96A" }} className="animate-spin" />
-                  <span className="text-sm font-bold text-white">Re-fitting...</span>
-                </div>
-              )}
             </div>
 
-            {/* Before/After slider label */}
-            <div className="flex justify-between text-[10px] text-gray-500 uppercase tracking-widest font-bold px-1">
-              <span>← Original</span>
-              <span style={{ color: "#C8A96A" }}>Drag to Compare</span>
-              <span>With Jewelry →</span>
+            <div className="flex justify-between text-[9px] text-gray-500 uppercase tracking-widest font-bold px-1 select-none">
+              <span>← Slide to Reveal Original</span>
+              <span className="text-[#C8A96A]">Drag Canvas to Move Jewelry</span>
+              <span>Slide to See Fit →</span>
             </div>
+
             <input
               type="range"
               min="0.01"
@@ -805,11 +1071,10 @@ export default function TryOnStudio() {
               step="0.01"
               value={sliderPos}
               onChange={(e) => setSliderPos(parseFloat(e.target.value))}
-              className="w-full cursor-ew-resize"
+              className="w-full cursor-ew-resize mt-2"
               style={{ accentColor: "#C8A96A" }}
             />
 
-            {/* Current piece summary */}
             <div
               className="flex items-center gap-4 rounded-2xl p-4 border"
               style={{ background: "var(--bg-elevated)", borderColor: "rgba(200,169,106,0.15)" }}
@@ -822,18 +1087,16 @@ export default function TryOnStudio() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white font-bold text-sm">{selected.name}</p>
-                <p className="text-[11px] mt-0.5" style={{ color: "#C8A96A" }}>{selected.price}</p>
+                <p className="text-[11px] mt-0.5 font-bold" style={{ color: "#C8A96A" }}>{selected.price}</p>
               </div>
             </div>
 
-            {/* Action buttons */}
+            {/* Action panel */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <button
                 onClick={handleSave}
                 className="flex items-center justify-center gap-2 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 border"
                 style={{ borderColor: "rgba(255,255,255,0.08)", color: "#ccc", background: "rgba(255,255,255,0.03)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#ccc"; }}
               >
                 <Heart size={14} /> Save Look
               </button>
@@ -841,8 +1104,6 @@ export default function TryOnStudio() {
                 onClick={handleDownload}
                 className="flex items-center justify-center gap-2 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 border"
                 style={{ borderColor: "rgba(255,255,255,0.08)", color: "#ccc", background: "rgba(255,255,255,0.03)" }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.2)"; e.currentTarget.style.color = "#fff"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#ccc"; }}
               >
                 <Download size={14} /> Download
               </button>
@@ -850,8 +1111,6 @@ export default function TryOnStudio() {
                 onClick={handleAddToCart}
                 className="flex items-center justify-center gap-2 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300"
                 style={{ background: "linear-gradient(135deg,#C8A96A,#8B6914)", color: "#111" }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
                 <ShoppingBag size={14} /> Add to Cart
               </button>
@@ -859,14 +1118,11 @@ export default function TryOnStudio() {
                 onClick={handleBuyNow}
                 className="flex items-center justify-center gap-2 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 border"
                 style={{ borderColor: "rgba(200,169,106,0.35)", color: "#C8A96A", background: "rgba(200,169,106,0.05)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(200,169,106,0.12)")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(200,169,106,0.05)")}
               >
                 <CreditCard size={14} /> Buy Now
               </button>
             </div>
 
-            {/* Try Another Jewelry link */}
             <div className="flex items-center justify-center gap-6 pt-2">
               <button
                 onClick={() => {
@@ -875,10 +1131,8 @@ export default function TryOnStudio() {
                 }}
                 className="flex items-center gap-2 text-[12px] font-bold uppercase tracking-widest cursor-pointer transition-colors"
                 style={{ color: "#C8A96A" }}
-                onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.7")}
-                onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
               >
-                <RotateCw size={13} /> Try Another Jewelry
+                <RotateCw size={13} /> Try Another Accessory
               </button>
               <span className="text-gray-700">|</span>
               <button
@@ -889,7 +1143,7 @@ export default function TryOnStudio() {
               </button>
             </div>
 
-            {/* ── ADVANCED ADJUSTMENT (hidden by default) ─────────────────── */}
+            {/* Advanced adjustments panel */}
             <div
               className="rounded-2xl border overflow-hidden"
               style={{ borderColor: "rgba(255,255,255,0.06)" }}
@@ -898,22 +1152,19 @@ export default function TryOnStudio() {
                 onClick={() => setShowAdvanced((v) => !v)}
                 className="w-full flex items-center justify-between px-5 py-4 text-[11px] uppercase tracking-widest font-bold cursor-pointer transition-colors"
                 style={{ color: "#555", background: "rgba(255,255,255,0.02)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#888")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "#555")}
               >
-                <span>Advanced Adjustment</span>
+                <span>Nudge Adjustments</span>
                 {showAdvanced ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
               </button>
 
               {showAdvanced && (
                 <div
-                  className="px-5 pb-6 pt-2 space-y-5 border-t animate-fadeIn"
+                  className="px-5 pb-6 pt-2 space-y-5 border-t"
                   style={{ borderColor: "rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.015)" }}
                 >
-                  {/* Move */}
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold" style={{ color: "#C8A96A" }}>
-                      <Move size={11} /> Move Position
+                      <Move size={11} /> Nudge Position
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -921,82 +1172,53 @@ export default function TryOnStudio() {
                           <span>Left / Right</span>
                           <span style={{ color: "#C8A96A" }}>{offsetX > 0 ? "+" : ""}{offsetX}px</span>
                         </div>
-                        <input type="range" min="-80" max="80" step="1" value={offsetX}
+                        <input type="range" min="-180" max="180" step="1" value={offsetX}
                           onChange={(e) => setOffsetX(parseInt(e.target.value))}
                           className="w-full" style={{ accentColor: "#C8A96A" }} />
-                        <div className="flex items-center gap-1 mt-2 flex-wrap">
-                          <button onClick={() => setOffsetX((x) => Math.max(-80, x - 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-5px</button>
-                          <button onClick={() => setOffsetX((x) => Math.max(-80, x - 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-1px</button>
-                          <button onClick={() => setOffsetX((x) => Math.min(80, x + 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+1px</button>
-                          <button onClick={() => setOffsetX((x) => Math.min(80, x + 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+5px</button>
-                        </div>
                       </div>
                       <div>
                         <div className="flex justify-between text-[10px] text-gray-500 mb-1.5">
                           <span>Up / Down</span>
                           <span style={{ color: "#C8A96A" }}>{offsetY > 0 ? "+" : ""}{offsetY}px</span>
                         </div>
-                        <input type="range" min="-80" max="80" step="1" value={offsetY}
+                        <input type="range" min="-180" max="180" step="1" value={offsetY}
                           onChange={(e) => setOffsetY(parseInt(e.target.value))}
                           className="w-full" style={{ accentColor: "#C8A96A" }} />
-                        <div className="flex items-center gap-1 mt-2 flex-wrap">
-                          <button onClick={() => setOffsetY((y) => Math.max(-80, y - 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-5px</button>
-                          <button onClick={() => setOffsetY((y) => Math.max(-80, y - 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-1px</button>
-                          <button onClick={() => setOffsetY((y) => Math.min(80, y + 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+1px</button>
-                          <button onClick={() => setOffsetY((y) => Math.min(80, y + 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+5px</button>
-                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Rotate */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold" style={{ color: "#C8A96A" }}>
-                      <RotateCcw size={11} /> Rotate
+                      <RotateCcw size={11} /> Twist Rotation
                     </div>
                     <div className="flex justify-between text-[10px] text-gray-500 mb-1.5">
-                      <span>Rotation angle</span>
+                      <span>Angle</span>
                       <span style={{ color: "#C8A96A" }}>{rotation}°</span>
                     </div>
-                    <input type="range" min="-45" max="45" step="1" value={rotation}
+                    <input type="range" min="-90" max="90" step="1" value={rotation}
                       onChange={(e) => setRotation(parseInt(e.target.value))}
                       className="w-full" style={{ accentColor: "#C8A96A" }} />
-                    <div className="flex items-center gap-1 mt-2 flex-wrap">
-                      <button onClick={() => setRotation((r) => Math.max(-45, r - 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-5°</button>
-                      <button onClick={() => setRotation((r) => Math.max(-45, r - 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-1°</button>
-                      <button onClick={() => setRotation((r) => Math.min(45, r + 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+1°</button>
-                      <button onClick={() => setRotation((r) => Math.min(45, r + 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+5°</button>
-                    </div>
                   </div>
 
-                  {/* Scale */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold" style={{ color: "#C8A96A" }}>
-                      <Maximize2 size={11} /> Scale Size
+                      <Maximize2 size={11} /> Resize Scale
                     </div>
                     <div className="flex justify-between text-[10px] text-gray-500 mb-1.5">
-                      <span>Jewelry size</span>
+                      <span>Size Scale</span>
                       <span style={{ color: "#C8A96A" }}>{Math.round(scale * 100)}%</span>
                     </div>
-                    <input type="range" min="0.5" max="1.8" step="0.02" value={scale}
+                    <input type="range" min="0.3" max="2.2" step="0.02" value={scale}
                       onChange={(e) => setScale(parseFloat(e.target.value))}
                       className="w-full" style={{ accentColor: "#C8A96A" }} />
-                    <div className="flex items-center gap-1 mt-2 flex-wrap">
-                      <button onClick={() => setScale((s) => Math.max(0.5, parseFloat((s - 0.1).toFixed(2))))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-10%</button>
-                      <button onClick={() => setScale((s) => Math.max(0.5, parseFloat((s - 0.02).toFixed(2))))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-2%</button>
-                      <button onClick={() => setScale((s) => Math.min(1.8, parseFloat((s + 0.02).toFixed(2))))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+2%</button>
-                      <button onClick={() => setScale((s) => Math.min(1.8, parseFloat((s + 0.1).toFixed(2))))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+10%</button>
-                    </div>
                   </div>
 
                   <button
                     onClick={() => { setOffsetX(0); setOffsetY(0); setRotation(0); setScale(1.0); }}
-                    className="text-[10px] uppercase tracking-widest font-bold cursor-pointer transition-colors"
-                    style={{ color: "#555" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = "#555")}
+                    className="text-[10px] uppercase tracking-widest font-bold cursor-pointer transition-colors text-gray-400 hover:text-white"
                   >
-                    Reset to AI Default
+                    Reset to AI defaults
                   </button>
                 </div>
               )}
