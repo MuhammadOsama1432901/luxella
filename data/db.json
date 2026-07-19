@@ -1,0 +1,662 @@
+{
+  "products": [
+    {
+      "id": 1,
+      "name": "Luxury Gold Necklace",
+      "image": "/images/products/product1.jpg",
+      "price": 2498,
+      "oldPrice": 3499,
+      "rating": 5,
+      "sale": true,
+      "category": "Necklaces",
+      "description": "Indulge in the luxury of this 24K gold plated necklace featuring an intricate diamond-cut crystal pendant. Perfect for formal events and bridal wear, this piece radiates timeless beauty.",
+      "stock": 10,
+      "featured": true,
+      "specifications": {
+        "Material": "24K Gold Plating",
+        "Stone": "Cubic Zirconia",
+        "Clasp Type": "Lobster Claw",
+        "Chain Length": "18 inches"
+      },
+      "sku": "LXL-NK-01",
+      "barcode": "890100101",
+      "costPrice": 1200,
+      "virtualTryOn": true,
+      "variants": {
+        "color": [
+          "Yellow Gold",
+          "White Gold",
+          "Rose Gold"
+        ]
+      },
+      "visibility": "visible"
+    },
+    {
+      "id": 2,
+      "name": "Elegant Earrings",
+      "image": "/images/products/product2.jpg",
+      "price": 1499,
+      "oldPrice": 1999,
+      "rating": 4,
+      "sale": true,
+      "category": "Earrings",
+      "description": "Make a statement with these breathtaking gold dangling earrings, adorned with premium synthetic emerald gemstones. Designed with a secure push-back closure, they offer both class and comfort.",
+      "stock": 15,
+      "featured": true,
+      "specifications": {
+        "Material": "18K Gold Plated Alloy",
+        "Stone": "Synthetic Emerald",
+        "Weight": "12g (pair)",
+        "Closure": "Push Back"
+      },
+      "sku": "LXL-ER-02",
+      "barcode": "890100102",
+      "costPrice": 650,
+      "virtualTryOn": true,
+      "variants": {
+        "color": [
+          "Emerald Green",
+          "Ruby Red",
+          "Sapphire Blue"
+        ]
+      },
+      "visibility": "visible"
+    },
+    {
+      "id": 3,
+      "name": "Diamond Ring",
+      "image": "/images/products/product3.jpg",
+      "price": 1999,
+      "oldPrice": 2599,
+      "rating": 5,
+      "sale": false,
+      "category": "Rings",
+      "description": "A classic symbol of sophistication. This sterling silver ring is crowned with a brilliant-cut central diamond stimulant that sparkles intensely from every angle.",
+      "stock": 5,
+      "featured": true,
+      "specifications": {
+        "Material": "Sterling Silver 925",
+        "Stone": "Brilliant-Cut Zirconia",
+        "Ring Size": "Adjustable",
+        "Band Width": "2mm"
+      },
+      "sku": "LXL-RG-03",
+      "barcode": "890100103",
+      "costPrice": 900,
+      "virtualTryOn": true,
+      "variants": {
+        "size": [
+          "6",
+          "7",
+          "8",
+          "9"
+        ]
+      },
+      "visibility": "visible"
+    },
+    {
+      "id": 4,
+      "name": "Pearl Bracelet",
+      "image": "/images/products/product4.jpg",
+      "price": 1299,
+      "oldPrice": 1799,
+      "rating": 4,
+      "sale": true,
+      "category": "Bracelets",
+      "description": "Wrap your wrist in elegance with this freshwater pearl bracelet. Threaded on durable elastic and finished with a gold-plated clasp, it is a versatile accessory for any outfit.",
+      "stock": 8,
+      "featured": true,
+      "specifications": {
+        "Material": "Freshwater Pearls, Gold Clasp",
+        "Pearl Size": "8mm",
+        "Length": "7 inches",
+        "Style": "Classic Beaded"
+      },
+      "sku": "LXL-BR-04",
+      "barcode": "890100104",
+      "costPrice": 500,
+      "virtualTryOn": false,
+      "variants": {
+        "color": [
+          "Natural White",
+          "Rose Pink"
+        ]
+      },
+      "visibility": "visible"
+    },
+    {
+      "id": 5,
+      "name": "Royal Bridal Set",
+      "image": "/images/categories/bridal.jpg",
+      "price": 12500,
+      "oldPrice": 15000,
+      "rating": 5,
+      "sale": true,
+      "category": "Bridal",
+      "description": "A majestic bridal jewelry set including a heavy collar necklace and matching dangle earrings, meticulously encrusted with high-grade Kundan stones and drop pearls.",
+      "stock": 3,
+      "featured": true,
+      "specifications": {
+        "Material": "Gold Plated Brass, Kundan Work",
+        "Stones": "Kundan & Faux Pearls",
+        "Includes": "Necklace + Pair of Earrings",
+        "Weight": "150g"
+      },
+      "sku": "LXL-BD-05",
+      "barcode": "890100105",
+      "costPrice": 6000,
+      "virtualTryOn": false,
+      "visibility": "visible"
+    },
+    {
+      "id": 6,
+      "name": "Modern Silver Hoops",
+      "image": "/images/categories/new.jpg",
+      "price": 999,
+      "oldPrice": 1499,
+      "rating": 4,
+      "sale": false,
+      "category": "New Arrival",
+      "description": "Elevate your casual attire with these contemporary sterling silver hoop earrings. Sleek, lightweight, and finished with a high-polish sheen.",
+      "stock": 20,
+      "featured": false,
+      "specifications": {
+        "Material": "Sterling Silver 925",
+        "Diameter": "30mm",
+        "Weight": "5g per hoop",
+        "Closure": "Hinge"
+      },
+      "sku": "LXL-ER-06",
+      "barcode": "890100106",
+      "costPrice": 400,
+      "virtualTryOn": true,
+      "visibility": "visible"
+    }
+  ],
+  "orders": [],
+  "users": [
+    {
+      "name": "nb",
+      "email": "afzal1432901@gmail.com",
+      "phone": "03126113234",
+      "passwordHash": "$2b$12$.jg4H0qxXoQBBcv9io0/6uLRXHxEhY7l6x5pBvHUhMg1ezhR5Zzhu",
+      "role": "customer",
+      "id": "usr_1784386080166_r6s3j",
+      "createdAt": "2026-07-18T14:48:00.166Z"
+    },
+    {
+      "name": "Muhammad Osama",
+      "email": "osamaafzal1432901@gmail.com",
+      "phone": "osamaafzal1432901@gmail.com",
+      "passwordHash": "$2b$12$bZSqsZTXvTrEYyrH4UeS.uPbABCsBkD2X95uB1xTy3CjkijEPuDGK",
+      "role": "admin",
+      "id": "usr_1784390621784_nnqwy",
+      "createdAt": "2026-07-18T16:03:41.784Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "1",
+      "name": "Necklaces",
+      "slug": "necklaces",
+      "displayOrder": 1,
+      "featured": true,
+      "subcategories": [
+        "Pendant Necklaces",
+        "Layered Necklaces",
+        "Chokers",
+        "Statement Necklaces",
+        "Pearl Necklaces",
+        "Chain Necklaces",
+        "Name Necklaces",
+        "Lockets",
+        "Beaded Necklaces",
+        "Crystal Necklaces",
+        "Heart Necklaces",
+        "Minimal Necklaces",
+        "Bridal Necklaces",
+        "Luxury Necklaces",
+        "Everyday Necklaces"
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Earrings",
+      "slug": "earrings",
+      "displayOrder": 2,
+      "featured": true,
+      "subcategories": [
+        "Stud Earrings",
+        "Hoop Earrings",
+        "Drop Earrings",
+        "Dangle Earrings",
+        "Huggie Earrings",
+        "Ear Cuffs",
+        "Pearl Earrings",
+        "Crystal Earrings",
+        "Tassel Earrings",
+        "Bridal Earrings",
+        "Statement Earrings",
+        "Clip-On Earrings",
+        "Minimal Earrings"
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Rings",
+      "slug": "rings",
+      "displayOrder": 3,
+      "featured": true,
+      "subcategories": [
+        "Adjustable Rings",
+        "Solitaire Rings",
+        "Stackable Rings",
+        "Couple Rings",
+        "Promise Rings",
+        "Engagement Style Rings",
+        "Cocktail Rings",
+        "Pearl Rings",
+        "Gemstone Rings",
+        "Minimal Rings",
+        "Open Rings",
+        "Signet Rings"
+      ]
+    },
+    {
+      "id": "4",
+      "name": "Bracelets",
+      "slug": "bracelets",
+      "displayOrder": 4,
+      "featured": true,
+      "subcategories": [
+        "Chain Bracelets",
+        "Tennis Bracelets",
+        "Charm Bracelets",
+        "Cuff Bracelets",
+        "Beaded Bracelets",
+        "Pearl Bracelets",
+        "Leather Bracelets",
+        "Adjustable Bracelets",
+        "Crystal Bracelets",
+        "Friendship Bracelets"
+      ]
+    },
+    {
+      "id": "5",
+      "name": "Bangles",
+      "slug": "bangles",
+      "displayOrder": 5,
+      "featured": true,
+      "subcategories": [
+        "Gold Bangles",
+        "Silver Bangles",
+        "Stone Bangles",
+        "Bridal Bangles",
+        "Kada Bangles",
+        "Open Bangles",
+        "Stackable Bangles"
+      ]
+    },
+    {
+      "id": "6",
+      "name": "Anklets",
+      "slug": "anklets",
+      "displayOrder": 6,
+      "featured": true,
+      "subcategories": [
+        "Chain Anklets",
+        "Charm Anklets",
+        "Pearl Anklets",
+        "Beaded Anklets",
+        "Layered Anklets",
+        "Adjustable Anklets",
+        "Minimal Anklets"
+      ]
+    },
+    {
+      "id": "7",
+      "name": "Brooches",
+      "slug": "brooches",
+      "displayOrder": 7,
+      "featured": false,
+      "subcategories": [
+        "Floral Brooches",
+        "Crystal Brooches",
+        "Pearl Brooches",
+        "Animal Brooches",
+        "Vintage Brooches",
+        "Luxury Brooches"
+      ]
+    },
+    {
+      "id": "8",
+      "name": "Hair Accessories",
+      "slug": "hair-accessories",
+      "displayOrder": 8,
+      "featured": false,
+      "subcategories": [
+        "Hair Pins",
+        "Hair Clips",
+        "Hair Bands",
+        "Bridal Hair Accessories",
+        "Hair Chains",
+        "Tiaras",
+        "Crowns"
+      ]
+    },
+    {
+      "id": "9",
+      "name": "Nose Jewelry",
+      "slug": "nose-jewelry",
+      "displayOrder": 9,
+      "featured": false,
+      "subcategories": [
+        "Nose Pins",
+        "Nose Rings",
+        "Septum Rings",
+        "Bridal Nose Jewelry"
+      ]
+    },
+    {
+      "id": "10",
+      "name": "Body Jewelry",
+      "slug": "body-jewelry",
+      "displayOrder": 10,
+      "featured": false,
+      "subcategories": [
+        "Belly Chains",
+        "Waist Chains",
+        "Armlets",
+        "Toe Rings",
+        "Hand Harness",
+        "Body Chains"
+      ]
+    },
+    {
+      "id": "11",
+      "name": "Watches",
+      "slug": "watches",
+      "displayOrder": 11,
+      "featured": true,
+      "subcategories": [
+        "Women's Watches",
+        "Luxury Watches",
+        "Bracelet Watches",
+        "Casual Watches",
+        "Fashion Watches",
+        "Smart Watch Straps"
+      ]
+    },
+    {
+      "id": "12",
+      "name": "Jewelry Sets",
+      "slug": "jewelry-sets",
+      "displayOrder": 12,
+      "featured": true,
+      "subcategories": [
+        "Necklace Sets",
+        "Bridal Sets",
+        "Party Sets",
+        "Pearl Sets",
+        "Crystal Sets",
+        "Gift Sets"
+      ]
+    },
+    {
+      "id": "13",
+      "name": "Bridal Collection",
+      "slug": "bridal-collection",
+      "displayOrder": 13,
+      "featured": true,
+      "subcategories": [
+        "Bridal Necklaces",
+        "Bridal Earrings",
+        "Bridal Bangles",
+        "Bridal Rings",
+        "Bridal Sets",
+        "Complete Bridal Collection"
+      ]
+    },
+    {
+      "id": "14",
+      "name": "Men's Jewelry",
+      "slug": "mens-jewelry",
+      "displayOrder": 14,
+      "featured": false,
+      "subcategories": [
+        "Men's Rings",
+        "Men's Bracelets",
+        "Men's Chains",
+        "Men's Pendants",
+        "Men's Watches",
+        "Cufflinks",
+        "Tie Clips"
+      ]
+    },
+    {
+      "id": "15",
+      "name": "Kids Jewelry",
+      "slug": "kids-jewelry",
+      "displayOrder": 15,
+      "featured": false,
+      "subcategories": [
+        "Kids Earrings",
+        "Kids Bracelets",
+        "Kids Necklaces",
+        "Kids Rings",
+        "Kids Gift Sets"
+      ]
+    },
+    {
+      "id": "16",
+      "name": "Personalized Jewelry",
+      "slug": "personalized-jewelry",
+      "displayOrder": 16,
+      "featured": true,
+      "subcategories": [
+        "Name Necklaces",
+        "Initial Necklaces",
+        "Name Bracelets",
+        "Custom Rings",
+        "Birthstone Jewelry",
+        "Engraved Jewelry"
+      ]
+    },
+    {
+      "id": "17",
+      "name": "Gift Collection",
+      "slug": "gift-collection",
+      "displayOrder": 17,
+      "featured": true,
+      "subcategories": [
+        "Birthday Gifts",
+        "Anniversary Gifts",
+        "Wedding Gifts",
+        "Valentine's Gifts",
+        "Mother's Day Gifts",
+        "Eid Collection",
+        "Graduation Gifts",
+        "Gift Cards"
+      ]
+    },
+    {
+      "id": "18",
+      "name": "New Arrivals",
+      "slug": "new-arrivals",
+      "displayOrder": 18,
+      "featured": true
+    },
+    {
+      "id": "19",
+      "name": "Best Sellers",
+      "slug": "best-sellers",
+      "displayOrder": 19,
+      "featured": true
+    },
+    {
+      "id": "20",
+      "name": "Trending",
+      "slug": "trending",
+      "displayOrder": 20,
+      "featured": true
+    },
+    {
+      "id": "21",
+      "name": "Sale",
+      "slug": "sale",
+      "displayOrder": 21,
+      "featured": true
+    },
+    {
+      "id": "22",
+      "name": "Limited Edition",
+      "slug": "limited-edition",
+      "displayOrder": 22,
+      "featured": true
+    },
+    {
+      "id": "23",
+      "name": "Premium Collection",
+      "slug": "premium-collection",
+      "displayOrder": 23,
+      "featured": true
+    },
+    {
+      "id": "24",
+      "name": "Luxury Collection",
+      "slug": "luxury-collection",
+      "displayOrder": 24,
+      "featured": true
+    },
+    {
+      "id": "25",
+      "name": "Clearance",
+      "slug": "clearance",
+      "displayOrder": 25,
+      "featured": false
+    }
+  ],
+  "reviews": [
+    {
+      "id": "rev_1",
+      "productId": 1,
+      "productName": "Luxury Gold Necklace",
+      "customerName": "Sadia Malik",
+      "customerEmail": "sadia@gmail.com",
+      "rating": 5,
+      "comment": "Absolutely gorgeous! The 24K gold finish has a beautiful, rich shine. Highly recommend it.",
+      "status": "approved",
+      "verifiedBuyer": true,
+      "createdAt": "2026-07-15T12:00:00.000Z"
+    },
+    {
+      "id": "rev_2",
+      "productId": 3,
+      "productName": "Diamond Ring",
+      "customerName": "Zainab Ali",
+      "customerEmail": "zainab@yahoo.com",
+      "rating": 5,
+      "comment": "The zirconia center sparkles like a real diamond. Perfect size and highly detailed finish.",
+      "status": "approved",
+      "verifiedBuyer": true,
+      "createdAt": "2026-07-16T14:30:00.000Z"
+    }
+  ],
+  "coupons": [
+    {
+      "id": "cp_1",
+      "code": "WELCOME10",
+      "type": "percentage",
+      "value": 10,
+      "minSpend": 1000,
+      "startDate": "2026-07-01T00:00:00.000Z",
+      "endDate": "2026-12-31T23:59:59.000Z",
+      "usageCount": 12,
+      "active": true
+    },
+    {
+      "id": "cp_2",
+      "code": "PKRFREE",
+      "type": "free_shipping",
+      "value": 0,
+      "minSpend": 3000,
+      "startDate": "2026-07-01T00:00:00.000Z",
+      "endDate": "2026-12-31T23:59:59.000Z",
+      "usageCount": 4,
+      "active": true
+    }
+  ],
+  "gifts": [
+    {
+      "id": "1",
+      "name": "Premium Gift Wrapping",
+      "price": 250,
+      "type": "wrapping",
+      "description": "Hand-wrapped in luxury paper with a custom ribbon."
+    },
+    {
+      "id": "2",
+      "name": "Luxury Gift Box",
+      "price": 500,
+      "type": "box",
+      "description": "A velvet-lined premium drawer style box."
+    },
+    {
+      "id": "3",
+      "name": "Greeting Message Card",
+      "price": 100,
+      "type": "card",
+      "description": "A personalized message card printed with calligraphy."
+    }
+  ],
+  "banners": [
+    {
+      "id": "bn_1",
+      "type": "hero",
+      "title": "Timeless Elegance Reimagined",
+      "subtitle": "Discover Handcrafted Fine Jewelry Collections",
+      "image": "/images/banners/banner1.jpg",
+      "link": "/shop",
+      "active": true
+    }
+  ],
+  "cms": [],
+  "settings": {
+    "storeName": "Luxella",
+    "phone": "+92-349-5804586",
+    "email": "osamaafzal1432901@gmail.com",
+    "address": "Lahore, Pakistan",
+    "currency": "PKR",
+    "taxRate": 16,
+    "maintenanceMode": false,
+    "logo": "/images/logo/logo-crest.jpg",
+    "favicon": "/favicon.ico",
+    "socialLinks": {
+      "instagram": "luxella.pk",
+      "facebook": "luxella",
+      "tiktok": "luxella.atelier"
+    },
+    "paymentKeys": {
+      "stripe": "",
+      "easyPaisa": "",
+      "jazzCash": ""
+    },
+    "shippingZones": [
+      {
+        "id": "1",
+        "name": "Local Delivery (Lahore)",
+        "rate": 150,
+        "minDays": 1,
+        "maxDays": 2
+      },
+      {
+        "id": "2",
+        "name": "National Shipping (Pakistan)",
+        "rate": 300,
+        "minDays": 3,
+        "maxDays": 5
+      }
+    ]
+  },
+  "logs": []
+}

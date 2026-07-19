@@ -1,0 +1,38 @@
+export const products = [
+  {
+    id: 1,
+    name: "Luxury Gold Necklace",
+    image: "/images/products/product1.jpg",
+    price: 2499,
+    oldPrice: 3499,
+    rating: 5,
+    sale: true,
+  },
+  {
+    id: 2,
+    name: "Elegant Earrings",
+    image: "/images/products/product2.jpg",
+    price: 1499,
+    oldPrice: 1999,
+    rating: 4,
+    sale: true,
+  },
+  {
+    id: 3,
+    name: "Diamond Ring",
+    image: "/images/products/product3.jpg",
+    price: 1999,
+    oldPrice: 2599,
+    rating: 5,
+    sale: false,
+  },
+  {
+    id: 4,
+    name: "Pearl Bracelet",
+    image: "/images/products/product4.jpg",
+    price: 1299,
+    oldPrice: 1799,
+    rating: 4,
+    sale: true,
+  },
+];

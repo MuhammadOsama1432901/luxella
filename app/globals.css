@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   LUXELLA — DARK LUXURY DESIGN SYSTEM
+   Inspired by high-end jewelry maisons: dark marble, warm gold, crisp white
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --font-playfair:  'Playfair Display', Georgia, serif;
+  --font-poppins:   'Poppins', system-ui, sans-serif;
+  /* Core palette */
+  --bg-base:        #080808;
+  --bg-surface:     #111111;
+  --bg-elevated:    #181818;
+  --bg-card:        #141414;
+
+  --gold:           #C8A96A;
+  --gold-light:     #E2C97E;
+  --gold-dark:      #8B6914;
+  --gold-muted:     rgba(200,169,106,0.15);
+  --gold-border:    rgba(200,169,106,0.25);
+
+  --text-primary:   #F5F0E8;
+  --text-secondary: #A89880;
+  --text-muted:     #5A5040;
+
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-gold:    rgba(200,169,106,0.25);
+
+  --glow-gold:      0 0 60px rgba(200,169,106,0.18);
+  --glow-gold-sm:   0 0 24px rgba(200,169,106,0.25);
+  --hero-bg:        linear-gradient(135deg, #060606 0%, #0f0d08 50%, #080808 100%);
+  --hero-fade-bg:   linear-gradient(to top, rgba(8,8,8,0.9), transparent);
+  --hero-glow:      radial-gradient(circle, rgba(200,169,106,0.12) 0%, transparent 70%);
+  --nav-bg:         rgba(8, 8, 8, 0.85);
+  --nav-drawer-bg:  rgba(10, 10, 10, 0.97);
+}
+
+[data-theme='light'] {
+  --font-playfair:  'Playfair Display', Georgia, serif;
+  --font-poppins:   'Poppins', system-ui, sans-serif;
+  --bg-base:        #FAF9F6;
+  --bg-surface:     #FFFFFF;
+  --bg-elevated:    #F2F0EC;
+  --bg-card:        #F6F4F0;
+
+  --gold:           #B09053;
+  --gold-light:     #CDB684;
+  --gold-dark:      #7E622B;
+  --gold-muted:     rgba(176,144,83,0.1);
+  --gold-border:    rgba(176,144,83,0.22);
+
+  --text-primary:   #1C1B1A;
+  --text-secondary: #5C5852;
+  --text-muted:     #8C8880;
+
+  --border-subtle:  rgba(0,0,0,0.06);
+  --border-gold:    rgba(176,144,83,0.25);
+
+  --glow-gold:      0 0 60px rgba(176,144,83,0.08);
+  --glow-gold-sm:   0 0 24px rgba(176,144,83,0.1);
+  --hero-bg:        linear-gradient(135deg, #FAF8F5 0%, #F3EEE5 50%, #E9E3D5 100%);
+  --hero-fade-bg:   linear-gradient(to top, rgba(250,249,246,0.9), transparent);
+  --hero-glow:      radial-gradient(circle, rgba(176,144,83,0.08) 0%, transparent 70%);
+  --nav-bg:         rgba(250, 249, 246, 0.85);
+  --nav-drawer-bg:  rgba(246, 244, 240, 0.97);
+}
+
+/* ── Reset & Base ──────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-poppins), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Subtle dark noise texture */
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(200,169,106,0.06) 0%, transparent 60%);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-playfair), Georgia, serif;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+h1 { letter-spacing: 0.04em; }
+
+/* ── Gold gradient utility ──────────────────────────────────────────────────── */
+.gold-gradient {
+  background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+}
+
+.gold-text {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Glass card ─────────────────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-gold);
+  border-radius: 1.5rem;
+}
+
+/* ── Premium divider ────────────────────────────────────────────────────────── */
+.gold-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-base); }
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+  border-radius: 3px;
+}
+
+/* ── Selection ──────────────────────────────────────────────────────────────── */
+::selection {
+  background: rgba(200,169,106,0.3);
+  color: #fff;
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(200,169,106,0.2); }
+  50%       { box-shadow: 0 0 50px rgba(200,169,106,0.45); }
+}
+
+@keyframes grain {
+  0%, 100% { transform: translate(0, 0); }
+  10%       { transform: translate(-2%, -3%); }
+  30%       { transform: translate(3%, 2%); }
+  50%       { transform: translate(-1%, 4%); }
+  70%       { transform: translate(2%, -2%); }
+  90%       { transform: translate(-3%, 1%); }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold), var(--gold-dark));
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+}
+
+.animate-float { animation: float 5s ease-in-out infinite; }
+.animate-glow  { animation: glow-pulse 3s ease-in-out infinite; }
+
+/* ── Form inputs adaptive style ────────────────────────────────────────────────── */
+input, textarea, select {
+  background: rgba(255,255,255,0.04) !important;
+  border-color: var(--border-gold) !important;
+  color: var(--text-primary) !important;
+}
+[data-theme='light'] input, [data-theme='light'] textarea, [data-theme='light'] select {
+  background: rgba(0,0,0,0.02) !important;
+  border-color: var(--gold-border) !important;
+  color: var(--text-primary) !important;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 0 3px var(--gold-muted) !important;
+}
+select option { background: var(--bg-surface) !important; color: var(--text-primary) !important; }
+
+/* ── Link hover glow ────────────────────────────────────────────────────────── */
+a.gold-link {
+  color: var(--gold);
+  text-decoration: none;
+  position: relative;
+}
+a.gold-link:hover { color: var(--gold-light); }
