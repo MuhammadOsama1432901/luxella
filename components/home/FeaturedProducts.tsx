@@ -53,7 +53,7 @@ export default function FeaturedProducts() {
         ) : featuredProds.length === 0 ? (
           <p className="text-center text-xs text-gray-500 font-bold uppercase tracking-wider py-8">No Featured Jewels Available</p>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
             {featuredProds.map((product) => (
               <ProductCard
                 key={product.id}

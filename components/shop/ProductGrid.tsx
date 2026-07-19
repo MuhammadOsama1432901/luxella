@@ -188,9 +188,9 @@ export default function ProductGrid({
       <section className="mx-auto max-w-7xl px-6 py-20">
         <div className="flex justify-center items-center py-12">
           {/* Skeleton Loaders */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 w-full">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="animate-pulse bg-[#121212] rounded-3xl p-6 border border-white/5 space-y-4">
+              <div key={i} className="animate-pulse bg-[#121212] rounded-3xl p-4 border border-white/5 space-y-4">
                 <div className="aspect-square bg-white/5 rounded-2xl" />
                 <div className="h-4 bg-white/10 rounded w-2/3" />
                 <div className="h-3 bg-white/5 rounded w-1/2" />
@@ -242,7 +242,7 @@ export default function ProductGrid({
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
         {filteredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

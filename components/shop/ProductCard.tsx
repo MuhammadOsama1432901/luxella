@@ -152,11 +152,11 @@ export default function ProductCard({
       </div>
 
       {/* Content */}
-      <div className="space-y-4 p-6 flex flex-col flex-grow">
+      <div className="space-y-3 p-4 sm:p-6 flex flex-col flex-grow">
         <div className="flex-grow">
           <Link href={`/product/${product.id}`}>
             <h3
-              className="text-lg font-bold transition hover:text-[#C8A96A] line-clamp-1"
+              className="text-sm sm:text-base font-bold transition hover:text-[#C8A96A] line-clamp-1"
               style={{ fontFamily: "var(--font-playfair)", color: "var(--text-primary)" }}
             >
               {product.name}
@@ -164,7 +164,7 @@ export default function ProductCard({
           </Link>
 
           {product.description && (
-            <p className="mt-2 line-clamp-2 text-xs" style={{ color: "var(--text-secondary)" }}>
+            <p className="mt-1 line-clamp-1 sm:line-clamp-2 text-[11px] sm:text-xs hidden sm:block" style={{ color: "var(--text-secondary)" }}>
               {product.description}
             </p>
           )}
@@ -175,26 +175,26 @@ export default function ProductCard({
           {Array.from({ length: 5 }).map((_, index) => (
             <Star
               key={index}
-              size={12}
+              size={10}
               fill={index < product.rating ? "#C8A96A" : "transparent"}
               color={index < product.rating ? "#C8A96A" : "#3e372e"}
             />
           ))}
 
-          <span className="ml-2 text-[10px] font-semibold tracking-wider" style={{ color: "var(--text-muted)" }}>
+          <span className="ml-1.5 text-[9px] font-semibold tracking-wider text-gray-500">
             ({product.rating}.0)
           </span>
         </div>
 
         {/* Price & Stock */}
-        <div className="flex items-center justify-between pt-1">
-          <div className="flex items-baseline gap-2.5">
-            <span className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
+        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 pt-0.5">
+          <div className="flex items-baseline gap-1.5 flex-wrap">
+            <span className="text-sm sm:text-base font-bold" style={{ color: "var(--text-primary)" }}>
               Rs. {product.price.toLocaleString()}
             </span>
 
             {product.oldPrice != null && product.oldPrice > product.price && (
-              <span className="text-xs line-through" style={{ color: "var(--text-muted)" }}>
+              <span className="text-[10px] line-through text-gray-500">
                 Rs. {product.oldPrice.toLocaleString()}
               </span>
             )}
@@ -202,11 +202,11 @@ export default function ProductCard({
 
           <div>
             {product.stock && product.stock > 0 ? (
-              <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-500">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-500">
                 In Stock
               </span>
             ) : (
-              <span className="text-[10px] font-bold uppercase tracking-widest text-rose-500">
+              <span className="text-[9px] font-bold uppercase tracking-widest text-rose-500">
                 Out of Stock
               </span>
             )}
@@ -214,11 +214,11 @@ export default function ProductCard({
         </div>
 
         {/* Buttons */}
-        <div className="flex gap-2 pt-2">
+        <div className="flex flex-col sm:flex-row gap-2 pt-1">
           <button
             onClick={handleAddToCart}
             disabled={!product.stock || product.stock === 0}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
             style={{
               background: "linear-gradient(135deg, #1c1c1c, #111111)",
               border: "1px solid rgba(200, 169, 106, 0.15)",
@@ -237,13 +237,13 @@ export default function ProductCard({
               }
             }}
           >
-            <ShoppingBag size={13} />
+            <ShoppingBag size={12} />
             Add to Cart
           </button>
 
           <button
             onClick={handleBuyNowWhatsApp}
-            className="rounded-xl px-4 py-3.5 text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-300 flex items-center justify-center cursor-pointer"
+            className="rounded-xl px-3 py-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-all duration-300 flex items-center justify-center cursor-pointer"
             style={{
               background: "rgba(255, 255, 255, 0.04)",
               border: "1px solid rgba(200, 169, 106, 0.15)",
