@@ -12,21 +12,23 @@ interface Review {
 // Fallback data shown while loading or if no approved reviews exist
 const FALLBACK_REVIEWS: Review[] = [
   {
+    name: "Hadiqa Ali",
+    review:
+      "Very classy drop earrings! The synthetic emerald stones stand out beautifully and look so premium.",
+    rating: 5,
+    product: "Elegant Earrings"
+  },
+  {
+    name: "Amna Javed",
+    review:
+      "The details are exquisite, and the packaging felt extremely premium. Excellent support from their stylists too!",
+    rating: 5,
+    product: "Luxury Gold Necklace"
+  },
+  {
     name: "Sarah Ahmed",
     review:
       "Amazing quality! It looks even better in real life. The virtual try-on tool is incredibly helpful and accurate.",
-    rating: 5,
-  },
-  {
-    name: "Ayesha Khan",
-    review:
-      "Fast delivery and premium packaging. The piece feels solid, premium, and adds a touch of classic elegance.",
-    rating: 5,
-  },
-  {
-    name: "Mariam Ali",
-    review:
-      "The jewelry is elegant, durable, and highly affordable. Lexa, the AI stylist, helped me pick the perfect set!",
     rating: 5,
   },
 ];
@@ -80,7 +82,7 @@ export default function Testimonials() {
 
         {/* Reviews Grid */}
         <div className="grid md:grid-cols-3 gap-8">
-          {reviews.slice(0, 3).map((review, index) => (
+          {reviews.slice(0, 6).map((review, index) => (
             <div
               key={index}
               className="p-8 rounded-3xl transition-all duration-300 hover:shadow-2xl flex flex-col justify-between group border border-[rgba(200,169,106,0.12)] hover:border-[#C8A96A]/40 hover:-translate-y-1.5"

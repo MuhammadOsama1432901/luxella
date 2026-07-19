@@ -562,6 +562,30 @@
       "status": "approved",
       "verifiedBuyer": true,
       "createdAt": "2026-07-16T14:30:00.000Z"
+    },
+    {
+      "id": "rev_3",
+      "productId": 2,
+      "productName": "Elegant Earrings",
+      "customerName": "Hadiqa Ali",
+      "customerEmail": "hadiqa.ali@gmail.com",
+      "rating": 5,
+      "comment": "Very classy drop earrings! The synthetic emerald stones stand out beautifully and look so premium.",
+      "status": "approved",
+      "verifiedBuyer": true,
+      "createdAt": "2026-07-18T10:15:00.000Z"
+    },
+    {
+      "id": "rev_4",
+      "productId": 1,
+      "productName": "Luxury Gold Necklace",
+      "customerName": "Amna Javed",
+      "customerEmail": "amna.javed@gmail.com",
+      "rating": 5,
+      "comment": "The details are exquisite, and the packaging felt extremely premium. Excellent support from their stylists too!",
+      "status": "approved",
+      "verifiedBuyer": true,
+      "createdAt": "2026-07-18T16:45:00.000Z"
     }
   ],
   "coupons": [
