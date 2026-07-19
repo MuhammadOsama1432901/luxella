@@ -30,8 +30,24 @@ export default function ChatWidget() {
   const [input, setInput]                 = useState("");
   const [loading, setLoading]             = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [catalog, setCatalog]             = useState<any[]>([]);
   const messagesEndRef                    = useRef<HTMLDivElement>(null);
   const inputRef                          = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    async function loadCatalog() {
+      try {
+        const res = await fetch("/api/products");
+        if (res.ok) {
+          const data = await res.json();
+          setCatalog(data.products || []);
+        }
+      } catch (err) {
+        console.error("Failed to load chatbot catalog:", err);
+      }
+    }
+    loadCatalog();
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -132,6 +148,22 @@ export default function ChatWidget() {
     }
 
     return parts.length > 0 ? parts : content;
+  }
+
+  // Finds product links in content and returns matching catalog items
+  function extractProductsFromContent(content: string) {
+    const productRegex = /\/product\/(\d+)/g;
+    const ids: number[] = [];
+    let match;
+    while ((match = productRegex.exec(content)) !== null) {
+      const id = parseInt(match[1], 10);
+      if (!ids.includes(id)) {
+        ids.push(id);
+      }
+    }
+    return ids
+      .map((id) => catalog.find((p) => p.id === id))
+      .filter((p) => !!p);
   }
 
   return (
@@ -255,7 +287,7 @@ export default function ChatWidget() {
 
               <div
                 className={[
-                  "max-w-[78%] px-4 py-3 text-xs leading-relaxed shadow-lg border",
+                  "max-w-[78%] px-4 py-3 text-xs leading-relaxed shadow-lg border flex flex-col gap-2.5",
                   msg.role === "user"
                     ? "text-black rounded-2xl rounded-br-none font-medium"
                     : "text-gray-300 rounded-2xl rounded-bl-none",
@@ -272,7 +304,47 @@ export default function ChatWidget() {
                       }
                 }
               >
-                {parseMessageContent(msg.content)}
+                <div>{parseMessageContent(msg.content)}</div>
+                
+                {/* Visual Product Cards if assistant references catalog items */}
+                {msg.role === "assistant" && (() => {
+                  const referencedProducts = extractProductsFromContent(msg.content);
+                  if (referencedProducts.length === 0) return null;
+                  return (
+                    <div className="mt-1.5 space-y-2 w-full">
+                      {referencedProducts.map((product: any) => (
+                        <div
+                          key={product.id}
+                          className="p-2 rounded-xl border flex items-center gap-2.5 transition-all duration-300 w-full"
+                          style={{
+                            background: "rgba(0, 0, 0, 0.45)",
+                            borderColor: "rgba(200, 169, 106, 0.15)",
+                          }}
+                        >
+                          <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-white/5 bg-black/20">
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              className="object-cover w-full h-full"
+                            />
+                          </div>
+                          <div className="flex-grow min-w-0">
+                            <p className="text-[10px] font-bold text-white truncate">{product.name}</p>
+                            <p className="text-[#C8A96A] text-[9px] font-semibold mt-0.5">Rs. {product.price.toLocaleString()}</p>
+                          </div>
+                          <Link
+                            href={`/product/${product.id}`}
+                            onClick={() => setIsOpen(false)}
+                            className="px-2.5 py-1.5 rounded-lg text-[8px] font-bold uppercase tracking-wider text-black transition-all hover:scale-105 active:scale-100 flex-shrink-0"
+                            style={{ background: "linear-gradient(135deg, #C8A96A, #8B6914)" }}
+                          >
+                            View
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
 
               {msg.role === "user" && (
