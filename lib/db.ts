@@ -200,7 +200,9 @@ interface DBStructure {
   subscribers?: { email: string; subscribedAt: string }[];
 }
 
-const DB_PATH = path.join(process.cwd(), "data", "db.json");
+const DB_PATH = process.env.VERCEL === "1"
+  ? path.join("/tmp", "db.json")
+  : path.join(process.cwd(), "data", "db.json");
 
 const initialProducts: DBProduct[] = [
   {
@@ -348,6 +350,18 @@ const defaultSettings: WebsiteSetting = {
 export async function readDB(): Promise<DBStructure> {
   try {
     await ensureDir(path.dirname(DB_PATH));
+    
+    // Copy initial database to writable /tmp on Vercel if it does not exist yet
+    if (process.env.VERCEL === "1") {
+      try {
+        await fs.access(DB_PATH);
+      } catch {
+        const repoDbPath = path.join(process.cwd(), "data", "db.json");
+        const repoData = await fs.readFile(repoDbPath, "utf-8");
+        await fs.writeFile(DB_PATH, repoData, "utf-8");
+      }
+    }
+
     const data = await fs.readFile(DB_PATH, "utf-8");
     const parsed = JSON.parse(data);
     

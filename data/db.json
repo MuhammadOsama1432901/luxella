@@ -191,7 +191,9 @@
       "passwordHash": "$2b$12$bZSqsZTXvTrEYyrH4UeS.uPbABCsBkD2X95uB1xTy3CjkijEPuDGK",
       "role": "admin",
       "id": "usr_1784390621784_nnqwy",
-      "createdAt": "2026-07-18T16:03:41.784Z"
+      "createdAt": "2026-07-18T16:03:41.784Z",
+      "resetToken": "e69f8e797f194337cd6f68af4ef2acaafa8c00ebfb842fa5e6325dffdbad5cf7",
+      "resetTokenExpiry": "2026-07-19T05:32:03.788Z"
     }
   ],
   "categories": [
