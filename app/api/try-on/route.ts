@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 import type { JewelryCategory } from "@/components/tryon/jewelryData";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "dummy-key-for-build" });
 
 // Default placements per jewelry type (fallback when no API key / vision fails)
 const DEFAULTS: Record<JewelryCategory, Array<{ x: number; y: number; width: number; rotation: number }>> = {

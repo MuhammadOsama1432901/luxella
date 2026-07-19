@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: process.env.OPENAI_API_KEY || "dummy-key-for-build",
 });
 
 const SYSTEM_PROMPT = `You are Lexa, the friendly and knowledgeable AI shopping assistant for Luxella — a premium artificial jewelry brand based in Pakistan.

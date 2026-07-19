@@ -86,6 +86,57 @@ function compressImage(dataUrl: string, maxWidth = 800): Promise<string> {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function TryOnStudio() {
   const { addToCart } = useCart();
+  const router = useRouter();
+
+  // Load real products from the database forTry-On e-commerce integration
+  const [dbProducts, setDbProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const res = await fetch("/api/products");
+        if (res.ok) {
+          const data = await res.json();
+          setDbProducts(data);
+        }
+      } catch (err) {
+        console.error("Failed to load products for try-on mapping:", err);
+      }
+    }
+    fetchProducts();
+  }, []);
+
+  // Map SVGs to real DB products
+  const getMappedDbProduct = useCallback((item: JewelryItem) => {
+    let targetId: number | null = null;
+    if (item.id === "n1") targetId = 1;
+    else if (item.id === "n2") targetId = 5;
+    else if (item.id === "e1") targetId = 2;
+    else if (item.id === "e2") targetId = 6;
+    else if (item.id === "r1") targetId = 3;
+    else if (item.id === "r2") targetId = 3;
+    else if (item.id === "b1") targetId = 4;
+    else if (item.id === "b2") targetId = 4;
+
+    if (targetId !== null) {
+      const found = dbProducts.find((p) => p.id === targetId);
+      if (found) return found;
+    }
+    
+    // Fallback object matching Product type
+    return {
+      id: parseFloat(item.id.replace(/\D/g, "") || "1") + 100,
+      name: item.name,
+      price: parseInt(item.price.replace(/[^\d]/g, "")) || 1499,
+      oldPrice: (parseInt(item.price.replace(/[^\d]/g, "")) || 1499) + 400,
+      rating: 5,
+      sale: true,
+      image: item.category === "earring" ? "/images/products/product2.jpg" : "/images/products/product1.jpg",
+      category: item.category,
+      description: item.description,
+      stock: 10,
+    };
+  }, [dbProducts]);
 
   // ── Core state ─────────────────────────────────────────────────────────────
   const [userImage,     setUserImage]     = useState<string | null>(null);
@@ -192,7 +243,7 @@ export default function TryOnStudio() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageBase64: compressed,
-          jewelryType: "auto",
+          jewelryType: item.category,
         }),
       });
 
@@ -335,22 +386,18 @@ export default function TryOnStudio() {
     setSliderPos(x);
   }
 
-  // ── Add to cart ─────────────────────────────────────────────────────────────
   function handleAddToCart() {
-    addToCart({
-      id: parseFloat(selected.id.replace(/\D/g, "") || "1") + Math.random(),
-      name: selected.name,
-      price: parseInt(selected.price.replace(/[^\d]/g, "")) || 1499,
-      oldPrice: (parseInt(selected.price.replace(/[^\d]/g, "")) || 1499) + 400,
-      rating: 5,
-      sale: true,
-      image: "/images/products/product2.jpg",
-      category: "Jewelry",
-      description: selected.description,
-    });
-    toast.success(`${selected.name} added to cart!`, {
+    const dbProd = getMappedDbProduct(selected);
+    addToCart(dbProd);
+    toast.success(`${dbProd.name} added to cart!`, {
       style: { background: "#111", color: "#C8A96A", border: "1px solid rgba(200,169,106,0.3)" },
     });
+  }
+
+  function handleBuyNow() {
+    const dbProd = getMappedDbProduct(selected);
+    addToCart(dbProd);
+    router.push("/checkout");
   }
 
   function handleDownload() {
@@ -718,6 +765,7 @@ export default function TryOnStudio() {
                 borderColor: "rgba(200,169,106,0.15)",
                 cursor: "ew-resize",
                 minHeight: 300,
+                touchAction: "none",
               }}
               onMouseDown={() => { isDragging.current = true; }}
               onMouseMove={(e) => { if (isDragging.current) updateSlider(e.clientX); }}
@@ -808,7 +856,7 @@ export default function TryOnStudio() {
                 <ShoppingBag size={14} /> Add to Cart
               </button>
               <button
-                onClick={handleAddToCart}
+                onClick={handleBuyNow}
                 className="flex items-center justify-center gap-2 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-wider cursor-pointer transition-all duration-300 border"
                 style={{ borderColor: "rgba(200,169,106,0.35)", color: "#C8A96A", background: "rgba(200,169,106,0.05)" }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(200,169,106,0.12)")}
@@ -859,7 +907,7 @@ export default function TryOnStudio() {
 
               {showAdvanced && (
                 <div
-                  className="px-5 pb-6 pt-2 space-y-5 border-t"
+                  className="px-5 pb-6 pt-2 space-y-5 border-t animate-fadeIn"
                   style={{ borderColor: "rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.015)" }}
                 >
                   {/* Move */}
@@ -876,6 +924,12 @@ export default function TryOnStudio() {
                         <input type="range" min="-80" max="80" step="1" value={offsetX}
                           onChange={(e) => setOffsetX(parseInt(e.target.value))}
                           className="w-full" style={{ accentColor: "#C8A96A" }} />
+                        <div className="flex items-center gap-1 mt-2 flex-wrap">
+                          <button onClick={() => setOffsetX((x) => Math.max(-80, x - 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-5px</button>
+                          <button onClick={() => setOffsetX((x) => Math.max(-80, x - 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-1px</button>
+                          <button onClick={() => setOffsetX((x) => Math.min(80, x + 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+1px</button>
+                          <button onClick={() => setOffsetX((x) => Math.min(80, x + 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+5px</button>
+                        </div>
                       </div>
                       <div>
                         <div className="flex justify-between text-[10px] text-gray-500 mb-1.5">
@@ -885,6 +939,12 @@ export default function TryOnStudio() {
                         <input type="range" min="-80" max="80" step="1" value={offsetY}
                           onChange={(e) => setOffsetY(parseInt(e.target.value))}
                           className="w-full" style={{ accentColor: "#C8A96A" }} />
+                        <div className="flex items-center gap-1 mt-2 flex-wrap">
+                          <button onClick={() => setOffsetY((y) => Math.max(-80, y - 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-5px</button>
+                          <button onClick={() => setOffsetY((y) => Math.max(-80, y - 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-1px</button>
+                          <button onClick={() => setOffsetY((y) => Math.min(80, y + 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+1px</button>
+                          <button onClick={() => setOffsetY((y) => Math.min(80, y + 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+5px</button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -901,6 +961,12 @@ export default function TryOnStudio() {
                     <input type="range" min="-45" max="45" step="1" value={rotation}
                       onChange={(e) => setRotation(parseInt(e.target.value))}
                       className="w-full" style={{ accentColor: "#C8A96A" }} />
+                    <div className="flex items-center gap-1 mt-2 flex-wrap">
+                      <button onClick={() => setRotation((r) => Math.max(-45, r - 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-5°</button>
+                      <button onClick={() => setRotation((r) => Math.max(-45, r - 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-1°</button>
+                      <button onClick={() => setRotation((r) => Math.min(45, r + 1))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+1°</button>
+                      <button onClick={() => setRotation((r) => Math.min(45, r + 5))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+5°</button>
+                    </div>
                   </div>
 
                   {/* Scale */}
@@ -915,6 +981,12 @@ export default function TryOnStudio() {
                     <input type="range" min="0.5" max="1.8" step="0.02" value={scale}
                       onChange={(e) => setScale(parseFloat(e.target.value))}
                       className="w-full" style={{ accentColor: "#C8A96A" }} />
+                    <div className="flex items-center gap-1 mt-2 flex-wrap">
+                      <button onClick={() => setScale((s) => Math.max(0.5, parseFloat((s - 0.1).toFixed(2))))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-10%</button>
+                      <button onClick={() => setScale((s) => Math.max(0.5, parseFloat((s - 0.02).toFixed(2))))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">-2%</button>
+                      <button onClick={() => setScale((s) => Math.min(1.8, parseFloat((s + 0.02).toFixed(2))))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+2%</button>
+                      <button onClick={() => setScale((s) => Math.min(1.8, parseFloat((s + 0.1).toFixed(2))))} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[8px] font-bold text-gray-400 hover:bg-white/10 active:scale-95 transition">+10%</button>
+                    </div>
                   </div>
 
                   <button
