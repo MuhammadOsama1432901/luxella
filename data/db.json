@@ -654,7 +654,7 @@
     "address": "Lahore, Pakistan",
     "currency": "PKR",
     "taxRate": 16,
-    "maintenanceMode": false,
+    "maintenanceMode": true,
     "logo": "/images/logo/logo-crest.jpg",
     "favicon": "/favicon.ico",
     "socialLinks": {
@@ -684,5 +684,15 @@
       }
     ]
   },
-  "logs": []
+  "logs": [
+    {
+      "id": "log_1784442647146_yzaf4",
+      "userId": "usr_1784390621784_nnqwy",
+      "userName": "Muhammad Osama",
+      "action": "update_settings",
+      "details": "Modified global store configurations",
+      "timestamp": "2026-07-19T06:30:47.146Z",
+      "ip": "::1"
+    }
+  ]
 }
