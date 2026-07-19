@@ -312,7 +312,7 @@ export default function TryOnStudio() {
       
       const mpResultPromise = new Promise<any>((resolve) => {
         tempImg.onload = () => {
-          if (landmarker && item.category === "bracelet") {
+          if (landmarker && (item.category === "bracelet" || item.category === "watch" || item.category === "ring")) {
             try {
               const mpData = landmarker.detect(tempImg);
               resolve(mpData);
@@ -346,40 +346,80 @@ export default function TryOnStudio() {
       setProgress(100);
 
       // ── MediaPipe Hand Landmark Placement mapping ───────────────────────────
-      if (item.category === "bracelet" && mpData && mpData.landmarks && mpData.landmarks.length > 0) {
+      if (mpData && mpData.landmarks && mpData.landmarks.length > 0) {
         const hand = mpData.landmarks[0];
-        const wrist = hand[0];
-        const middleKnuckle = hand[9];
-        const pinkyBase = hand[17];
-        const indexBase = hand[5];
 
-        // 1. Calculate wrist tilt angle (perpendicular to center hand axis)
-        const dx = middleKnuckle.x - wrist.x;
-        const dy = middleKnuckle.y - wrist.y;
-        const handAngleRad = Math.atan2(dy, dx);
-        const wristAngleDeg = ((handAngleRad + Math.PI / 2) * 180) / Math.PI;
+        if (item.category === "bracelet" || item.category === "watch") {
+          const wrist = hand[0];
+          const middleKnuckle = hand[9];
+          const pinkyBase = hand[17];
+          const indexBase = hand[5];
 
-        // 2. Estimate wrist width scale relative to hand scale
-        const distPinky = Math.hypot(pinkyBase.x - wrist.x, pinkyBase.y - wrist.y);
-        const distIndex = Math.hypot(indexBase.x - wrist.x, indexBase.y - wrist.y);
-        const estimatedWristWidth = (distPinky + distIndex) * 0.76;
+          // 1. Calculate wrist tilt angle (perpendicular to center hand axis)
+          const dx = middleKnuckle.x - wrist.x;
+          const dy = middleKnuckle.y - wrist.y;
+          const handAngleRad = Math.atan2(dy, dx);
+          const wristAngleDeg = ((handAngleRad + Math.PI / 2) * 180) / Math.PI;
 
-        // Place bracelet slightly above landmark 0 (wrist) towards the palm
-        const wristCenterX = wrist.x + dx * 0.08;
-        const wristCenterY = wrist.y + dy * 0.08;
+          // 2. Estimate wrist width scale relative to hand scale
+          const distPinky = Math.hypot(pinkyBase.x - wrist.x, pinkyBase.y - wrist.y);
+          const distIndex = Math.hypot(indexBase.x - wrist.x, indexBase.y - wrist.y);
+          const estimatedWristWidth = (distPinky + distIndex) * 0.76;
 
-        setPlacements([
-          {
-            x: wristCenterX,
-            y: wristCenterY,
-            width: estimatedWristWidth,
-            rotation: wristAngleDeg,
-          },
-        ]);
-        setDetectedCat("bracelet");
-        toast.success("AI detected wrist perfectly!");
-      } 
-      // ── API Vision Fallback ────────────────────────────────────────────────
+          // Place bracelet slightly above landmark 0 (wrist) towards the palm
+          const wristCenterX = wrist.x + dx * 0.08;
+          const wristCenterY = wrist.y + dy * 0.08;
+
+          setPlacements([
+            {
+              x: wristCenterX,
+              y: wristCenterY,
+              width: estimatedWristWidth,
+              rotation: wristAngleDeg,
+            },
+          ]);
+          setDetectedCat(item.category);
+          toast.success(`AI detected wrist for ${item.category}!`);
+        } 
+        else if (item.category === "ring") {
+          // Ring finger mapping: base is 13, PIP joint is 14
+          const ringBase = hand[13];
+          const ringPip = hand[14];
+
+          // 1. Calculate finger bone tilt angle
+          const dx = ringPip.x - ringBase.x;
+          const dy = ringPip.y - ringBase.y;
+          const fingerAngleRad = Math.atan2(dy, dx);
+          const ringRotationDeg = ((fingerAngleRad + Math.PI / 2) * 180) / Math.PI;
+
+          // 2. Estimate finger width based on hand size
+          const handScale = Math.hypot(hand[9].x - hand[0].x, hand[9].y - hand[0].y);
+          const estimatedRingWidth = handScale * 0.15; // perfect visual scale
+
+          // Place ring exactly between knuckle (13) and PIP joint (14)
+          const ringCenterX = (ringBase.x + ringPip.x) / 2;
+          const ringCenterY = (ringBase.y + ringPip.y) / 2;
+
+          setPlacements([
+            {
+              x: ringCenterX,
+              y: ringCenterY,
+              width: estimatedRingWidth,
+              rotation: ringRotationDeg,
+            },
+          ]);
+          setDetectedCat("ring");
+          toast.success("AI detected ring finger perfectly!");
+        } else {
+          // Fallback to API if category is face/neck
+          if (apiRes && apiRes.placements) {
+            setPlacements(apiRes.placements);
+          } else {
+            setPlacements(PLACEMENT_DEFAULTS[item.category]);
+          }
+        }
+      }
+      // ── API Vision Fallback (when no Hand detected) ────────────────────────
       else if (apiRes && apiRes.placements) {
         if (apiRes.category) {
           setDetectedCat(apiRes.category);
@@ -453,15 +493,15 @@ export default function TryOnStudio() {
           ctx.translate(cx, cy);
           ctx.rotate(((p.rotation + rotation) * Math.PI) / 180);
 
-          // ── Volumetric Cylinder Wrap for Bracelet / Watch ─────────────────
-          if (selected.category === "bracelet" || selected.category === "watch") {
+          // ── Volumetric Cylinder Wrap for Bracelet / Watch / Ring ──────────
+          if (selected.category === "bracelet" || selected.category === "watch" || selected.category === "ring") {
             const N = 64; // number of vertical strips for smooth rendering
             const sW = jImg.width;
             const sH = jImg.height;
             const sliceSW = sW / N;
 
-            // Perspective Curvature (creates elliptical cylinder illusion)
-            const curvature = 0.22; 
+            // Curvature: flatter for rings, more curved for bracelets/watches
+            const curvature = selected.category === "ring" ? 0.14 : 0.22; 
 
             // A. Draw Curved Drop Shadow first
             ctx.save();
