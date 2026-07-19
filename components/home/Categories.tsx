@@ -19,7 +19,7 @@ const collectionsList: CollectionItem[] = [
   {
     name: "New Arrivals",
     desc: "Discover our latest handcrafted designs inspired by modern elegance.",
-    image: "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=600&auto=format&fit=crop&q=80",
+    image: "/images/categories/new.jpg",
     badge: "NEW",
     count: 14,
     heightDesktop: "460px",
@@ -28,7 +28,7 @@ const collectionsList: CollectionItem[] = [
   {
     name: "Best Sellers",
     desc: "Most-loved iconic statements curated by our master craftsmen.",
-    image: "https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=600&auto=format&fit=crop&q=80",
+    image: "/images/categories/best-sellers.jpg",
     badge: "TRENDING",
     count: 28,
     heightDesktop: "390px",
@@ -37,7 +37,7 @@ const collectionsList: CollectionItem[] = [
   {
     name: "Bridal Collection",
     desc: "Timeless pieces crafted for life's most memorable celebrations.",
-    image: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=600&auto=format&fit=crop&q=80",
+    image: "/images/categories/bridal.jpg",
     badge: "EXCLUSIVE",
     count: 18,
     heightDesktop: "510px",
@@ -46,7 +46,7 @@ const collectionsList: CollectionItem[] = [
   {
     name: "Luxury Collection",
     desc: "Premium statement jewelry crafted with exceptional attention to detail.",
-    image: "https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=600&auto=format&fit=crop&q=80",
+    image: "/images/categories/luxury.jpg",
     badge: "BEST SELLER",
     count: 12,
     heightDesktop: "420px",
@@ -55,7 +55,7 @@ const collectionsList: CollectionItem[] = [
   {
     name: "Personalized Jewelry",
     desc: "Engrave initials and custom lettering on precious metals.",
-    image: "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=600&auto=format&fit=crop&q=80",
+    image: "/images/categories/personalized.jpg",
     badge: "EXCLUSIVE",
     count: 8,
     heightDesktop: "490px",
@@ -64,7 +64,7 @@ const collectionsList: CollectionItem[] = [
   {
     name: "Gift Collection",
     desc: "Elegant gifts beautifully designed for every special occasion.",
-    image: "https://images.unsplash.com/photo-1549439602-43ebcb2328aa?w=600&auto=format&fit=crop&q=80",
+    image: "/images/banners/gift-packaging.jpg",
     badge: "TRENDING",
     count: 22,
     heightDesktop: "410px",
@@ -73,7 +73,7 @@ const collectionsList: CollectionItem[] = [
   {
     name: "Limited Edition",
     desc: "Extremely rare collector releases with restricted allocations.",
-    image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=600&auto=format&fit=crop&q=80",
+    image: "/images/categories/limited-edition.jpg",
     badge: "LIMITED",
     count: 5,
     heightDesktop: "470px",
@@ -82,7 +82,7 @@ const collectionsList: CollectionItem[] = [
   {
     name: "Sale Collection",
     desc: "Special seasonal privileges on selected atelier masterpieces.",
-    image: "https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=600&auto=format&fit=crop&q=80",
+    image: "/images/categories/sale.jpg",
     badge: "SALE",
     count: 31,
     heightDesktop: "380px",
