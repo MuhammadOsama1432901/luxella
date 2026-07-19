@@ -84,6 +84,8 @@ export interface DBUser {
   createdAt: string;
   permissions?: string[];
   loginHistory?: { ip?: string; timestamp: string }[];
+  resetToken?: string;
+  resetTokenExpiry?: string;
 }
 
 export interface Category {
