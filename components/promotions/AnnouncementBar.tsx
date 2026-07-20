@@ -91,36 +91,39 @@ export default function AnnouncementBar() {
   const getIcon = (type: string) => {
     switch (type) {
       case "free_shipping":
-        return <Truck className="w-3.5 h-3.5 text-[#C8A96A]" />;
+        return <Truck className="w-3.5 h-3.5 text-[#0F0F10]" />;
       case "free_gift":
       case "packaging":
-        return <Gift className="w-3.5 h-3.5 text-[#C8A96A]" />;
+        return <Gift className="w-3.5 h-3.5 text-[#0F0F10]" />;
       case "flash_sale":
       case "clearance":
-        return <Flame className="w-3.5 h-3.5 text-red-500 animate-pulse" />;
+        return <Flame className="w-3.5 h-3.5 text-[#9E1B1B] animate-pulse" />;
       case "limited_offer":
       case "coupon":
-        return <Clock className="w-3.5 h-3.5 text-[#C8A96A]" />;
+        return <Clock className="w-3.5 h-3.5 text-[#0F0F10]" />;
       default:
-        return <Sparkles className="w-3.5 h-3.5 text-[#C8A96A]" />;
+        return <Sparkles className="w-3.5 h-3.5 text-[#0F0F10]" />;
     }
   };
 
   return (
     <div
-      className="relative z-50 bg-[#0B0B0C] border-b border-[#C8A96A]/10 text-xs text-stone-300 py-2.5 px-8 select-none"
+      className="relative z-50 w-full h-[44px] flex items-center justify-center px-8 select-none mb-2 shadow-md transition-all duration-300"
+      style={{
+        background: "linear-gradient(90deg, #EAD09D 0%, #C8A96A 100%)",
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-center min-h-[16px]">
+      <div className="max-w-7xl mx-auto flex items-center justify-center">
         <AnimatePresence mode="wait">
           <motion.div
             key={current.id + "_" + currentIndex}
             initial={{ y: 15, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -15, opacity: 0 }}
-            transition={{ duration: 0.35, ease: "easeInOut" }}
-            className="flex items-center gap-2 cursor-pointer hover:text-white transition-colors"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="flex items-center gap-2 cursor-pointer font-medium uppercase tracking-[0.1em] text-[10px] md:text-xs text-[#0F0F10] hover:opacity-85 transition-opacity"
           >
             {getIcon(current.type)}
             {current.link ? (
@@ -136,10 +139,10 @@ export default function AnnouncementBar() {
 
       <button
         onClick={() => setIsVisible(false)}
-        className="absolute right-4 top-1/2 -translate-y-1/2 text-stone-500 hover:text-white transition-colors p-1"
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-[#0F0F10]/60 hover:text-[#0F0F10] transition-colors p-1"
         aria-label="Dismiss announcement"
       >
-        <X className="w-3.5 h-3.5" />
+        <X className="w-4 h-4" />
       </button>
     </div>
   );
