@@ -374,7 +374,7 @@ export function PromotionsTab({ products, categories, onRefresh }: PromotionsTab
           <p className="text-xs text-stone-400">Manage announcement sliders, coupons, and flash campaign events.</p>
         </div>
 
-        <div className="flex gap-2 bg-black/45 border border-stone-850 p-1 rounded-xl">
+        <div className="flex flex-wrap md:flex-nowrap gap-1.5 bg-black/45 border border-stone-850 p-1.5 rounded-xl">
           {[
             { key: "dashboard", label: "Analytics" },
             { key: "announcements", label: "Announcements" },
