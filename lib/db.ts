@@ -121,16 +121,61 @@ export interface Review {
 export interface Coupon {
   id: string;
   code: string;
-  type: "percentage" | "fixed" | "free_shipping" | "buy_x_get_y";
-  value: number;
-  buyQty?: number;
-  getQty?: number;
+  type: "percentage" | "fixed" | "free_shipping" | "free_gift";
+  value: number; // percentage value (e.g. 20 for 20%) or fixed amount
   minSpend?: number;
+  maxDiscount?: number;
   startDate: string;
   endDate: string;
   usageLimit?: number;
   usageCount: number;
   active: boolean;
+  isOneTime?: boolean;
+  customerScope?: string[]; // Specific emails allowed
+  categoryScope?: string;   // Specific category allowed
+  autoApply?: boolean;
+}
+
+export interface Announcement {
+  id: string;
+  text: string;
+  type: "free_shipping" | "discount" | "flash_sale" | "new_arrival" | "bridal" | "limited_offer" | "bogo" | "free_gift" | "coupon" | "festival" | "clearance" | "packaging";
+  link?: string;
+  active: boolean;
+  priority: number; // to display highest priority offer
+  createdAt?: string;
+}
+
+export interface FlashSale {
+  id: string;
+  title: string;
+  startDate: string;
+  endDate: string;
+  products: {
+    productId: number;
+    flashPrice: number;
+    stockLimit: number;
+    stockSold: number;
+  }[];
+  active: boolean;
+}
+
+export interface Promotion {
+  id: string;
+  type: "hero" | "category" | "collection" | "flash_sale" | "seasonal" | "festival";
+  title: string;
+  subtitle?: string;
+  image?: string;
+  link?: string;
+  active: boolean;
+  startDate: string;
+  endDate: string;
+  discountBadge?: string;
+  promoCode?: string;
+  hasCountdown?: boolean;
+  categoryScope?: string;
+  collectionScope?: string;
+  productScope?: number[];
 }
 
 export interface GiftSetting {
@@ -198,6 +243,9 @@ interface DBStructure {
   logs: SystemLog[];
   customerMeta?: Record<string, { isVip?: boolean; isBlocked?: boolean }>;
   subscribers?: { email: string; subscribedAt: string }[];
+  announcements?: Announcement[];
+  flashSales?: FlashSale[];
+  promotions?: Promotion[];
 }
 
 const DB_PATH = process.env.VERCEL === "1"
@@ -618,6 +666,39 @@ export async function getSettings(): Promise<WebsiteSetting> {
 export async function saveSettings(settings: WebsiteSetting): Promise<void> {
   const db = await readDB();
   db.settings = settings;
+  await writeDB(db);
+}
+
+// ── Announcements CRUD ────────────────────────────────────────────────────────
+export async function getAnnouncements(): Promise<Announcement[]> {
+  const db = await readDB();
+  return db.announcements || [];
+}
+export async function saveAnnouncements(announcements: Announcement[]): Promise<void> {
+  const db = await readDB();
+  db.announcements = announcements;
+  await writeDB(db);
+}
+
+// ── Flash Sales CRUD ──────────────────────────────────────────────────────────
+export async function getFlashSales(): Promise<FlashSale[]> {
+  const db = await readDB();
+  return db.flashSales || [];
+}
+export async function saveFlashSales(flashSales: FlashSale[]): Promise<void> {
+  const db = await readDB();
+  db.flashSales = flashSales;
+  await writeDB(db);
+}
+
+// ── Promotions CRUD ───────────────────────────────────────────────────────────
+export async function getPromotions(): Promise<Promotion[]> {
+  const db = await readDB();
+  return db.promotions || [];
+}
+export async function savePromotions(promotions: Promotion[]): Promise<void> {
+  const db = await readDB();
+  db.promotions = promotions;
   await writeDB(db);
 }
 

@@ -9,6 +9,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { LogOut, Shield, Search, X, Home, ShoppingBag, Heart, Settings, ClipboardList, FileText, Sparkles, Gift } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "@/providers/ThemeProvider";
+import AnnouncementBar from "@/components/promotions/AnnouncementBar";
 
 const navLinks = [
   { href: "/",            label: "Home"        },
@@ -126,6 +127,7 @@ export default function Navbar() {
 
   return (
     <>
+      <AnnouncementBar />
       {/* ── Sticky Header (hides on scroll down, shows on scroll up) ── */}
       <header
         className={`sticky top-0 z-50 transition-transform duration-300 ${

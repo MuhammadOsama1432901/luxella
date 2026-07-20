@@ -667,10 +667,13 @@
       "type": "percentage",
       "value": 10,
       "minSpend": 1000,
+      "maxDiscount": 1000,
       "startDate": "2026-07-01T00:00:00.000Z",
       "endDate": "2026-12-31T23:59:59.000Z",
       "usageCount": 12,
-      "active": true
+      "active": true,
+      "isOneTime": false,
+      "autoApply": false
     },
     {
       "id": "cp_2",
@@ -678,10 +681,13 @@
       "type": "free_shipping",
       "value": 0,
       "minSpend": 3000,
+      "maxDiscount": 300,
       "startDate": "2026-07-01T00:00:00.000Z",
       "endDate": "2026-12-31T23:59:59.000Z",
       "usageCount": 4,
-      "active": true
+      "active": true,
+      "isOneTime": false,
+      "autoApply": true
     }
   ],
   "gifts": [
@@ -765,6 +771,72 @@
       "details": "Modified global store configurations",
       "timestamp": "2026-07-19T06:30:47.146Z",
       "ip": "::1"
+    }
+  ],
+  "announcements": [
+    {
+      "id": "ann_1",
+      "text": "✨ Free Shipping on Orders Above PKR 2,999",
+      "type": "free_shipping",
+      "link": "/shop",
+      "active": true,
+      "priority": 1
+    },
+    {
+      "id": "ann_2",
+      "text": "💎 Flat 20% OFF on Bridal Collection",
+      "type": "bridal",
+      "link": "/shop?category=Bridal",
+      "active": true,
+      "priority": 2
+    },
+    {
+      "id": "ann_3",
+      "text": "🎁 Free Luxury Gift Box on Orders Above PKR 7,500",
+      "type": "free_gift",
+      "link": "/gift-studio",
+      "active": true,
+      "priority": 3
+    }
+  ],
+  "flashSales": [
+    {
+      "id": "fs_1",
+      "title": "Midnight Glow Flash Sale",
+      "startDate": "2026-07-20T00:00:00.000Z",
+      "endDate": "2026-07-25T23:59:59.000Z",
+      "products": [
+        {
+          "productId": 1,
+          "flashPrice": 1999,
+          "stockLimit": 10,
+          "stockSold": 2
+        },
+        {
+          "productId": 2,
+          "flashPrice": 1199,
+          "stockLimit": 15,
+          "stockSold": 6
+        }
+      ],
+      "active": true
+    }
+  ],
+  "promotions": [
+    {
+      "id": "promo_1",
+      "type": "hero",
+      "title": "Bridal Season Flat 20% OFF",
+      "subtitle": "Immerse yourself in traditional artificial luxury handcrafted with precision.",
+      "image": "/images/categories/bridal.jpg",
+      "link": "/shop?category=Bridal",
+      "active": true,
+      "startDate": "2026-07-20T00:00:00.000Z",
+      "endDate": "2026-07-30T23:59:59.000Z",
+      "discountBadge": "20% OFF",
+      "promoCode": "BRIDAL20",
+      "hasCountdown": true,
+      "categoryScope": "Bridal"
     }
   ]
 }

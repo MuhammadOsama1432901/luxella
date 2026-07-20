@@ -8,7 +8,7 @@ import { Order, DBProduct, DBUser, Category, Review, Coupon, GiftSetting, Banner
 import {
   LayoutDashboard, ShoppingBag, Box, Boxes, FolderOpen, Star, Ticket, Gift, Sparkles,
   Image, FileText, Send, CreditCard, Truck, Users, BarChart2, Shield, Settings,
-  LogOut, RefreshCw, AlertTriangle
+  LogOut, RefreshCw, AlertTriangle, Percent
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -16,12 +16,13 @@ import { toast } from "sonner";
 import { DashboardTab, OrdersTab, CustomersTab, ReportsTab, UsersTab } from "@/app/admin/components/SalesTabs";
 import { ProductsTab, InventoryTab, ReviewsTab, CouponsTab, GiftTab, TryOnTab } from "@/app/admin/components/ProductTabs";
 import { CategoriesTab, BannersTab, CmsTab, MarketingTab, PaymentsTab, ShippingTab, SettingsTab } from "@/app/admin/components/StoreTabs";
+import { PromotionsTab } from "@/app/admin/components/PromotionsTab";
 
 type TabKey =
   | "dashboard" | "orders" | "products" | "inventory" | "categories"
   | "reviews" | "coupons" | "gifts" | "tryon" | "banners"
   | "cms" | "marketing" | "payments" | "shipping" | "customers"
-  | "reports" | "users" | "settings";
+  | "reports" | "users" | "settings" | "promotions";
 
 interface TabItem {
   key: TabKey;
@@ -203,6 +204,7 @@ export default function AdminPage() {
     { key: "dashboard",  label: "Dashboard",  category: "sales",   icon: <LayoutDashboard size={14} /> },
     { key: "orders",     label: "Orders",     category: "sales",   icon: <ShoppingBag size={14} /> },
     { key: "customers",  label: "Customers",  category: "sales",   icon: <Users size={14} /> },
+    { key: "promotions", label: "Promotions", category: "sales",   icon: <Percent size={14} style={{ color: "#C8A96A" }} /> },
     { key: "reports",    label: "Reports",    category: "sales",   icon: <BarChart2 size={14} /> },
     { key: "users",      label: "Staff",      category: "sales",   icon: <Shield size={14} /> },
     // Catalog Tab Category
@@ -327,6 +329,7 @@ export default function AdminPage() {
               {activeTab === "customers"  && <CustomersTab customers={users} onToggleVip={handleToggleVip} onToggleBlock={handleToggleBlock} />}
               {activeTab === "reports"    && <ReportsTab orders={orders} />}
               {activeTab === "users"      && <UsersTab users={users} onUpdateRole={(userId, role) => triggerPostAction("update_user_role", { userId, role })} />}
+              {activeTab === "promotions" && <PromotionsTab products={products} categories={categories} onRefresh={fetchAdminData} />}
               
               {activeTab === "products"   && <ProductsTab products={products} onSaveProduct={handleSaveProduct} onDeleteProduct={handleDeleteProduct} />}
               {activeTab === "inventory"  && <InventoryTab products={products} onUpdateStock={(id, stock) => handleSaveProduct({ id, stock })} />}

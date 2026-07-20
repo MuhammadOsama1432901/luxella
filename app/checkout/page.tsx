@@ -7,7 +7,7 @@ import Image from "next/image";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { useCart } from "@/providers/CartProvider";
-import { CreditCard, Truck, ArrowLeft, Loader2, Sparkles, Smartphone, Landmark, CheckCircle } from "lucide-react";
+import { CreditCard, Truck, ArrowLeft, Loader2, Sparkles, Smartphone, Landmark, CheckCircle, Tag, X } from "lucide-react";
 import { toast } from "sonner";
 import { BANK_DETAILS } from "@/constants/business";
 
@@ -69,22 +69,150 @@ export default function CheckoutPage() {
   const [epWalletNumber, setEpWalletNumber] = useState("");
   const [epTxnId, setEpTxnId] = useState("");
   const [upgradeGift, setUpgradeGift] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  // Coupon States
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+  const [couponError, setCouponError] = useState("");
+  const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
 
   useEffect(() => {
     setMounted(true);
-    async function loadSettings() {
+    
+    async function loadSettingsAndUser() {
       try {
-        const res = await fetch("/api/settings");
-        if (res.ok) {
-          const data = await res.json();
-          setSettings(data);
+        const [settingsRes, userRes] = await Promise.all([
+          fetch("/api/settings"),
+          fetch("/api/auth/me")
+        ]);
+        if (settingsRes.ok) {
+          setSettings(await settingsRes.json());
+        }
+        if (userRes.ok) {
+          const uData = await userRes.json();
+          setUser(uData.user);
         }
       } catch (err) {
-        console.error("Failed to load settings:", err);
+        console.error("Failed to load checkout settings/user:", err);
       }
     }
-    loadSettings();
+    loadSettingsAndUser();
   }, []);
+
+  useEffect(() => {
+    async function fetchCoupons() {
+      try {
+        const res = await fetch("/api/promotions");
+        if (res.ok) {
+          const data = await res.json();
+          const list = data.coupons || [];
+          setAvailableCoupons(list);
+          
+          // Auto-apply check
+          const autoApplied = list.find((c: any) => 
+            c.active && 
+            c.autoApply && 
+            new Date(c.startDate) <= new Date() && 
+            new Date(c.endDate) >= new Date() &&
+            (!c.minSpend || cartTotal >= c.minSpend)
+          );
+          if (autoApplied) {
+            setAppliedCoupon(autoApplied);
+            toast.success(`Coupon "${autoApplied.code}" auto-applied successfully! ✨`);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch coupons:", err);
+      }
+    }
+    if (mounted) fetchCoupons();
+  }, [mounted, cartTotal]);
+
+  const handleApplyCoupon = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setCouponError("");
+    const code = couponCode.trim().toUpperCase();
+    if (!code) return;
+
+    const coupon = availableCoupons.find(c => c.code.toUpperCase() === code);
+    if (!coupon) {
+      setCouponError("Invalid coupon code.");
+      return;
+    }
+
+    if (!coupon.active) {
+      setCouponError("This coupon is no longer active.");
+      return;
+    }
+
+    const now = new Date();
+    if (new Date(coupon.startDate) > now) {
+      setCouponError("This promotion has not started yet.");
+      return;
+    }
+    if (new Date(coupon.endDate) < now) {
+      setCouponError("This coupon has expired.");
+      return;
+    }
+
+    if (coupon.minSpend && cartTotal < coupon.minSpend) {
+      setCouponError(`Minimum purchase of Rs. ${coupon.minSpend.toLocaleString()} required.`);
+      return;
+    }
+
+    // Check email scope if customer specific
+    if (coupon.customerScope && coupon.customerScope.length > 0) {
+      if (!user) {
+        setCouponError("Please login to use this customer-specific coupon.");
+        return;
+      }
+      if (!coupon.customerScope.map((e: string) => e.toLowerCase()).includes(user.email.toLowerCase())) {
+        setCouponError("This coupon is not valid for your account.");
+        return;
+      }
+    }
+
+    setAppliedCoupon(coupon);
+    toast.success(`Coupon "${coupon.code}" applied successfully! 💎`);
+    setCouponCode("");
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    setCouponError("");
+  };
+
+  const calculateDiscount = () => {
+    if (!appliedCoupon) return 0;
+    
+    if (appliedCoupon.type === "free_shipping") {
+      return shippingFee;
+    }
+    
+    if (appliedCoupon.type === "free_gift") {
+      return upgradeGift ? 499 : 0;
+    }
+
+    if (appliedCoupon.type === "percentage") {
+      let discount = (cartTotal * appliedCoupon.value) / 100;
+      if (appliedCoupon.maxDiscount && discount > appliedCoupon.maxDiscount) {
+        discount = appliedCoupon.maxDiscount;
+      }
+      return Math.round(discount);
+    }
+
+    if (appliedCoupon.type === "fixed") {
+      return appliedCoupon.value;
+    }
+
+    return 0;
+  };
+
+  const discountAmount = calculateDiscount();
+  const taxAmount = settings?.taxRate > 0 ? Math.round((cartTotal - (appliedCoupon?.type === "percentage" || appliedCoupon?.type === "fixed" ? discountAmount : 0)) * (settings.taxRate / 100)) : 0;
+  const grandTotal = Math.max(0, cartTotal + shippingFee + (upgradeGift ? 499 : 0) + taxAmount - discountAmount);
 
   // Card formatting
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,8 +247,6 @@ export default function CheckoutPage() {
     router.replace("/shop");
     return null;
   }
-
-  const grandTotal = cartTotal + shippingFee + (upgradeGift ? 499 : 0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -787,6 +913,47 @@ export default function CheckoutPage() {
                 </button>
               </div>
 
+              {/* Promo Coupon Application Box */}
+              <div className="bg-black/35 border border-stone-850 p-4 rounded-2xl space-y-3">
+                <p className="text-[10px] uppercase tracking-wider font-bold text-stone-400">Apply Promo Code</p>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between bg-[#C8A96A]/10 border border-[#C8A96A]/20 p-2.5 rounded-xl text-xs">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-3.5 h-3.5 text-[#C8A96A]" />
+                      <span className="font-mono text-[#C8A96A] font-bold">{appliedCoupon.code}</span>
+                      <span className="text-[10px] text-stone-400">
+                        ({appliedCoupon.type === "percentage" ? `${appliedCoupon.value}% OFF` : appliedCoupon.type === "free_shipping" ? "Free Ship" : `Rs. ${appliedCoupon.value} OFF`})
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRemoveCoupon}
+                      className="text-stone-400 hover:text-white transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="e.g. BRIDAL20"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value)}
+                      className="flex-grow rounded-xl px-3 py-2 text-xs outline-none bg-stone-900 border border-stone-800 text-white focus:border-[#C8A96A] uppercase"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      className="bg-stone-900 hover:bg-[#C8A96A] text-stone-300 hover:text-black font-bold text-xs py-2 px-4 rounded-xl border border-stone-800 hover:border-transparent transition-all"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                )}
+                {couponError && <p className="text-[10px] text-red-400">{couponError}</p>}
+              </div>
+
               {/* Subtotal & Delivery Costs */}
               <div className="space-y-3.5 text-xs border-t pt-4" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
                 <div className="flex justify-between font-medium">
@@ -797,7 +964,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between font-medium">
                   <span style={{ color: "var(--text-secondary)" }}>Shipping &amp; Handling</span>
                   <span>
-                    {shippingFee === 0 ? (
+                    {appliedCoupon?.type === "free_shipping" || shippingFee === 0 ? (
                       <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
                         FREE
                       </span>
@@ -810,14 +977,23 @@ export default function CheckoutPage() {
                 {upgradeGift && (
                   <div className="flex justify-between font-medium">
                     <span style={{ color: "var(--text-secondary)" }}>🎁 Premium Gift Package</span>
-                    <span style={{ color: "var(--text-primary)" }}>Rs. 499</span>
+                    <span className={appliedCoupon?.type === "free_gift" ? "text-emerald-400 font-bold" : "text-stone-200"}>
+                      {appliedCoupon?.type === "free_gift" ? "FREE" : "Rs. 499"}
+                    </span>
+                  </div>
+                )}
+
+                {appliedCoupon && discountAmount > 0 && (
+                  <div className="flex justify-between font-medium text-emerald-400">
+                    <span>Discount ({appliedCoupon.code})</span>
+                    <span>- Rs. {discountAmount.toLocaleString()}</span>
                   </div>
                 )}
 
                 {settings?.taxRate > 0 && (
                   <div className="flex justify-between font-medium">
                     <span style={{ color: "var(--text-secondary)" }}>Estimated Tax ({settings.taxRate}%)</span>
-                    <span style={{ color: "var(--text-primary)" }}>Rs. {Math.round(cartTotal * (settings.taxRate / 100)).toLocaleString()}</span>
+                    <span style={{ color: "var(--text-primary)" }}>Rs. {taxAmount.toLocaleString()}</span>
                   </div>
                 )}
 
