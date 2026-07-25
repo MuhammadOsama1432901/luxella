@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import ProductCard from "@/components/shop/ProductCard";
 import { Product } from "@/types/product";
+import { ArrowRight } from "lucide-react";
 
 export default function FeaturedProducts() {
   const [featuredProds, setFeaturedProds] = useState<Product[]>([]);
@@ -16,7 +17,8 @@ export default function FeaturedProducts() {
         const res = await fetch("/api/products?featured=true");
         if (res.ok) {
           const data = await res.json();
-          setFeaturedProds(data.slice(0, 4));
+          // Load 6 featured products for a premium grid look
+          setFeaturedProds(data.slice(0, 6));
         }
       } catch (err) {
         console.error("Error loading featured products", err);
@@ -28,32 +30,30 @@ export default function FeaturedProducts() {
   }, []);
 
   return (
-    <section className="py-14 relative overflow-hidden" style={{ background: "var(--bg-base)" }}>
-      {/* Subtle decorative glow */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] pointer-events-none"
-        style={{ background: "radial-gradient(circle, rgba(200,169,106,0.03) 0%, transparent 70%)" }} />
-
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-
+    <section className="py-12 bg-[#0B0B0C] border-b border-stone-900/60">
+      <div className="px-4">
+        
         {/* Section Header */}
-        <div className="text-center mb-10">
-          <p className="text-[10px] uppercase tracking-[0.5em] font-semibold mb-4" style={{ color: "#C8A96A" }}>
+        <div className="mb-8">
+          <p className="text-[9px] uppercase tracking-[0.25em] font-bold text-[#C8A14A] mb-1">
             ✦ Curated Elegance
           </p>
-          <h2 className="text-4xl md:text-5xl font-bold" style={{ fontFamily: "var(--font-playfair)", color: "var(--text-primary)" }}>
-            Featured Pieces
+          <h2 className="text-xl font-bold text-white uppercase tracking-wider" style={{ fontFamily: "var(--font-playfair)" }}>
+            Featured Jewels
           </h2>
-          <div className="gold-divider w-24 mx-auto mt-6" />
         </div>
 
         {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#C8A96A]" />
+          <div className="grid grid-cols-2 gap-4">
+            {Array.from({ length: 4 }).map((_, idx) => (
+              <div key={idx} className="aspect-square bg-stone-900 animate-pulse rounded-[18px]" />
+            ))}
           </div>
         ) : featuredProds.length === 0 ? (
-          <p className="text-center text-xs text-gray-500 font-bold uppercase tracking-wider py-8">No Featured Jewels Available</p>
+          <p className="text-center text-[10px] text-stone-500 font-bold uppercase tracking-wider py-8">No Featured Jewels Available</p>
         ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+          /* Premium 2-column Grid */
+          <div className="grid grid-cols-2 gap-4">
             {featuredProds.map((product) => (
               <ProductCard
                 key={product.id}
@@ -64,16 +64,13 @@ export default function FeaturedProducts() {
         )}
 
         {/* View All CTA */}
-        <div className="text-center mt-12">
+        <div className="text-center mt-10">
           <Link
             href="/shop"
-            className="inline-flex items-center gap-2.5 px-10 py-4 rounded-full text-xs font-bold uppercase tracking-[0.25em] text-white transition-all duration-300 hover:scale-105 hover:shadow-xl"
-            style={{ background: "linear-gradient(135deg, #C8A96A, #8B6914)", boxShadow: "0 8px 24px rgba(200,169,106,0.25)" }}
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full text-[10px] font-bold uppercase tracking-[0.2em] text-[#C8A14A] border border-[#C8A14A]/30 hover:border-[#C8A14A] transition-all bg-black/20"
           >
-            View Full Collection
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-              <path d="M5 12h14M12 5l7 7-7 7" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
+            Explore Full Collection
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 

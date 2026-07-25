@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   ],
 };
 
+import MobileAppWrapper from "@/components/layout/MobileAppWrapper";
+
 export default function RootLayout({
   children,
 }: {
@@ -44,8 +46,12 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="antialiased" style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}>
-        <Providers>{children}</Providers>
+      <body className="antialiased" style={{ background: "#050506", color: "var(--text-primary)" }}>
+        <Providers>
+          <MobileAppWrapper>
+            {children}
+          </MobileAppWrapper>
+        </Providers>
       </body>
     </html>
   );

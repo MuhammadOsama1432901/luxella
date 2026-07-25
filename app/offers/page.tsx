@@ -154,28 +154,25 @@ export default function OffersPage() {
       <Navbar />
 
       {/* Hero Banner Section */}
-      <section className="relative py-20 overflow-hidden border-b border-[#C8A96A]/10 bg-gradient-to-b from-[#0B0B0C] to-[#080809]">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(200,169,106,0.06),transparent_60%)] pointer-events-none" />
-        <div className="max-w-7xl mx-auto px-6 relative z-10 text-center">
-          <span className="text-[10px] uppercase tracking-[0.6em] font-semibold text-[#C8A96A] mb-4 block">
+      <div className="px-4 pb-6 pt-10 space-y-2 text-center">
+          <span className="text-[10px] uppercase tracking-[0.6em] font-semibold text-[#C8A96A] block">
             ✦ Luxella Atelier ✦
           </span>
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white mb-6" style={{ fontFamily: "var(--font-playfair)" }}>
-            Exclusive Promotions & Offers
+          <h1 className="text-2xl font-bold tracking-tight text-white" style={{ fontFamily: "var(--font-playfair)" }}>
+            Exclusive Offers
           </h1>
-          <p className="text-stone-400 max-w-xl mx-auto text-sm md:text-base leading-relaxed">
-            Discover tailored savings on our handcrafted fine jewelry. Acquire masterfully designed collections with limited-time boutique privileges.
+          <p className="text-stone-400 text-[11px] leading-relaxed">
+            Tailored savings on our handcrafted fine jewelry. Boutique privileges for a limited time.
           </p>
-          <div className="gold-divider w-24 mx-auto mt-8" />
+          <div className="gold-divider w-16 mx-auto mt-3" />
         </div>
-      </section>
 
       {loading ? (
         <div className="py-32 flex items-center justify-center">
           <div className="w-10 h-10 border-2 border-[#C8A96A] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto px-6 py-14 space-y-20">
+        <div className="px-4 py-8 space-y-12">
           
           {/* ── 1. FLASH SALES (IF ACTIVE) ────────────────────────────────────── */}
           {activeFlashSales.length > 0 && (
@@ -185,14 +182,11 @@ export default function OffersPage() {
                 <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide" style={{ fontFamily: "var(--font-playfair)" }}>
                   Limited Flash Privileges
                 </h2>
-                <div className="ml-auto bg-red-950/40 border border-red-500/20 text-red-400 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider animate-pulse flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-red-500" /> Active Now
-                </div>
               </div>
 
               {activeFlashSales.map((fs) => (
                 <div key={fs.id} className="bg-gradient-to-r from-stone-950 via-[#0B0B0C] to-stone-950 border border-[#C8A96A]/15 rounded-3xl p-6 md:p-8 space-y-6">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div className="flex flex-col gap-4">
                     <div>
                       <h3 className="text-xl font-bold text-white mb-2" style={{ fontFamily: "var(--font-playfair)" }}>
                         {fs.title}
@@ -205,10 +199,9 @@ export default function OffersPage() {
                     </div>
                   </div>
 
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                  <div className="grid grid-cols-1 gap-4 mt-4">
                     {fs.products.map((p) => {
                       const percentOff = Math.round(((p.price - p.flashPrice) / p.price) * 100);
-                      const stockProgress = (p.stockLimit - p.stockSold) / p.stockLimit;
                       const itemsLeft = p.stockLimit - p.stockSold;
 
                       return (
@@ -234,7 +227,6 @@ export default function OffersPage() {
                           </div>
 
                           <div className="space-y-3">
-                            {/* Stock progress bar */}
                             <div className="space-y-1">
                               <div className="flex justify-between text-[10px] text-stone-400">
                                 <span>Stock Claimed</span>
@@ -269,8 +261,8 @@ export default function OffersPage() {
           <div className="space-y-8">
             <div className="flex items-center gap-3 border-b border-[#C8A96A]/10 pb-4">
               <Sparkles className="w-6 h-6 text-[#C8A96A]" />
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide" style={{ fontFamily: "var(--font-playfair)" }}>
-                Active Deals & Collections
+              <h2 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: "var(--font-playfair)" }}>
+                Active Deals
               </h2>
             </div>
 
@@ -280,10 +272,10 @@ export default function OffersPage() {
                 <p className="text-stone-400 text-xs">No active store-wide collection promotions at the moment.</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="flex flex-col gap-6">
                 {activeDeals.map((promo) => (
                   <div key={promo.id} className="relative bg-[#0B0B0C] border border-[#C8A96A]/15 rounded-3xl overflow-hidden flex flex-col justify-between hover:border-[#C8A96A]/45 transition-all duration-300">
-                    <div className="aspect-[21/9] relative w-full overflow-hidden border-b border-stone-900">
+                    <div className="aspect-[16/9] relative w-full overflow-hidden border-b border-stone-900">
                       <img
                         src={promo.image || "/images/banners/banner1.jpg"}
                         alt={promo.title}
@@ -297,7 +289,7 @@ export default function OffersPage() {
                       )}
                     </div>
 
-                    <div className="p-6 md:p-8 space-y-6">
+                    <div className="p-6 space-y-6">
                       <div className="space-y-2">
                         <h3 className="text-xl font-bold text-white" style={{ fontFamily: "var(--font-playfair)" }}>
                           {promo.title}
@@ -312,7 +304,7 @@ export default function OffersPage() {
                         </div>
                       )}
 
-                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border-t border-stone-900 pt-4">
+                      <div className="flex flex-col items-stretch gap-4 border-t border-stone-900 pt-4">
                         {promo.promoCode ? (
                           <div className="flex items-center justify-between bg-black/40 border border-stone-800 rounded-xl px-4 py-2">
                             <span className="text-xs font-mono text-[#C8A96A] tracking-wider font-semibold mr-4">
@@ -345,12 +337,12 @@ export default function OffersPage() {
           <div className="space-y-8">
             <div className="flex items-center gap-3 border-b border-[#C8A96A]/10 pb-4">
               <Tag className="w-6 h-6 text-[#C8A96A]" />
-              <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide" style={{ fontFamily: "var(--font-playfair)" }}>
+              <h2 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: "var(--font-playfair)" }}>
                 Signature Coupon Vault
               </h2>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="flex flex-col gap-4">
               {coupons.filter(c => c.active && new Date(c.endDate) >= now).map((coupon) => (
                 <div key={coupon.id} className="relative bg-gradient-to-b from-[#121214] to-black border border-stone-800 rounded-2xl p-6 flex flex-col justify-between hover:border-[#C8A96A]/30 transition-all duration-300">
                   <div className="space-y-4">
@@ -397,14 +389,14 @@ export default function OffersPage() {
             <div className="space-y-8">
               <div className="flex items-center gap-3 border-b border-[#C8A96A]/10 pb-4">
                 <Clock className="w-6 h-6 text-stone-500" />
-                <h2 className="text-2xl md:text-3xl font-bold text-white tracking-wide" style={{ fontFamily: "var(--font-playfair)" }}>
+                <h2 className="text-2xl font-bold text-white tracking-wide" style={{ fontFamily: "var(--font-playfair)" }}>
                   Upcoming Exclusives
                 </h2>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8 opacity-75">
+              <div className="flex flex-col gap-4 opacity-75">
                 {upcomingDeals.map((promo) => (
-                  <div key={promo.id} className="bg-[#0B0B0C]/40 border border-stone-900 rounded-3xl p-6 md:p-8 flex flex-col justify-between">
+                  <div key={promo.id} className="bg-[#0B0B0C]/40 border border-stone-900 rounded-3xl p-6 flex flex-col justify-between">
                     <div>
                       <span className="text-[10px] text-[#C8A96A] uppercase tracking-[0.2em] font-semibold mb-2 block">
                         Starts {new Date(promo.startDate).toLocaleDateString()}
@@ -430,7 +422,7 @@ export default function OffersPage() {
                 </h2>
               </div>
 
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="flex flex-col gap-4">
                 {expiredDeals.slice(0, 3).map((promo) => (
                   <div key={promo.id} className="bg-[#0B0B0C]/20 border border-stone-950 rounded-2xl p-6 flex flex-col justify-between">
                     <div>

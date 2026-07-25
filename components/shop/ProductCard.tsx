@@ -1,24 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { Heart, ShoppingBag, Eye, Star, Sparkles } from "lucide-react";
+import { Heart, Star, Sparkles, Plus } from "lucide-react";
 import { Product } from "@/types/product";
 import { useCart } from "@/providers/CartProvider";
-import { useState } from "react";
 import { toast } from "sonner";
-import { BUSINESS_PHONE, WHATSAPP_API } from "@/constants/business";
+import { motion } from "framer-motion";
 
 interface ProductCardProps {
   product: Product;
 }
 
-export default function ProductCard({
-  product,
-}: ProductCardProps) {
+export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const [isLiked, setIsLiked] = useState(() => {
-    // Persist wishlist in localStorage
     if (typeof window === "undefined") return false;
     try {
       const wishlist: number[] = JSON.parse(localStorage.getItem("luxella_wishlist") || "[]");
@@ -29,11 +25,11 @@ export default function ProductCard({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     addToCart(product);
-    toast.success(`${product.name} added to cart!`, {
+    toast.success(`${product.name} added to cart! ✨`, {
       style: {
         background: "rgba(20, 20, 20, 0.95)",
         color: "#ffffff",
-        border: "1px solid #C8A96A",
+        border: "1px solid #C8A14A",
       },
     });
   };
@@ -42,7 +38,6 @@ export default function ProductCard({
     e.preventDefault();
     const newLiked = !isLiked;
     setIsLiked(newLiked);
-    // Persist to localStorage
     try {
       const wishlist: number[] = JSON.parse(localStorage.getItem("luxella_wishlist") || "[]");
       const updated = newLiked
@@ -50,212 +45,96 @@ export default function ProductCard({
         : wishlist.filter((id) => id !== product.id);
       localStorage.setItem("luxella_wishlist", JSON.stringify(updated));
     } catch { /* ignore */ }
+    
     if (newLiked) {
-      toast.success("Added to wishlist!", {
-        style: { background: "rgba(20, 20, 20, 0.95)", color: "#ffffff", border: "1px solid #C8A96A" },
-      });
+      toast.success("Added to wishlist! 💎");
     }
   };
 
-  const handleBuyNowWhatsApp = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const message = `Hello Luxella! I am interested in purchasing this product:\n\n*Product*: ${product.name}\n*Price*: Rs. ${product.price.toLocaleString()}\n*ID*: #${product.id}\n\nIs it available? Please guide me on the next steps. Thank you!`;
-    window.open(WHATSAPP_API(BUSINESS_PHONE, message), "_blank");
-  };
-
   return (
-    <div
-      className="group overflow-hidden rounded-3xl border transition-all duration-500 hover:-translate-y-2 hover:shadow-3xl flex flex-col h-full"
-      style={{
-        background: "var(--bg-elevated)",
-        borderColor: "rgba(200, 169, 106, 0.12)",
-      }}
+    <motion.div
+      whileTap={{ scale: 0.98 }}
+      className="group relative flex flex-col bg-[#111111] border border-stone-850 rounded-[18px] overflow-hidden shadow-md hover:shadow-lg transition-all duration-300"
     >
-      {/* Product Image */}
-      <div className="relative overflow-hidden aspect-square bg-[#0b0b0b] border-b border-gray-800/30">
+      {/* Product Image Wrapper */}
+      <div className="relative aspect-square overflow-hidden bg-stone-950">
         <Link href={`/product/${product.id}`} className="block w-full h-full">
-          <Image
+          <img
             src={product.image}
             alt={product.name}
-            width={700}
-            height={700}
-            className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         </Link>
 
-        {/* Discount / Sale Badge */}
-        {product.oldPrice && product.oldPrice > product.price ? (
-          <span
-            className="absolute left-4 top-4 rounded-md px-3 py-1 text-[9px] font-bold tracking-[0.2em] text-white shadow-lg uppercase z-20"
-            style={{ background: "linear-gradient(135deg, #A82E2E, #7A1D1D)" }}
-          >
-            -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}% OFF
-          </span>
-        ) : product.sale ? (
-          <span
-            className="absolute left-4 top-4 rounded-md px-3 py-1 text-[9px] font-bold tracking-[0.2em] text-white shadow-lg uppercase z-20"
-            style={{ background: "linear-gradient(135deg, #C8A96A, #8B6914)" }}
-          >
-            SALE
-          </span>
-        ) : null}
+        {/* Wishlist Button Overlay */}
+        <button
+          onClick={handleLike}
+          className="absolute top-2.5 right-2.5 z-20 w-8 h-8 rounded-full flex items-center justify-center bg-black/40 backdrop-blur-md border border-white/5 text-[#F8F6F2] hover:text-[#C8A14A] active:scale-90 transition-all"
+          aria-label="Wishlist"
+        >
+          <Heart size={14} fill={isLiked ? "#C8A14A" : "transparent"} className={isLiked ? "text-[#C8A14A]" : "text-white/80"} />
+        </button>
 
         {/* AI Try-On Badge */}
         {product.virtualTryOn && (
           <span
-            className="absolute left-4 bottom-4 rounded-md px-2.5 py-1 text-[8px] font-bold uppercase tracking-widest text-[#C8A96A] backdrop-blur-md flex items-center gap-1 z-20"
-            style={{ background: "rgba(10, 10, 10, 0.8)", border: "1px solid #C8A96A" }}
+            className="absolute left-2.5 bottom-2.5 rounded-full px-2 py-0.5 text-[7px] font-bold uppercase tracking-widest text-[#C8A14A] bg-black/60 border border-[#C8A14A]/30 backdrop-blur-sm flex items-center gap-0.5 z-10"
           >
-            <Sparkles size={8} /> Try-On
+            <Sparkles size={7} /> Try-On
           </span>
         )}
 
-        {/* Category Tag */}
-        {product.category && (
+        {/* Sale / Discount Badge */}
+        {product.oldPrice && product.oldPrice > product.price ? (
           <span
-            className="absolute right-4 bottom-4 rounded-md px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-white backdrop-blur-md z-20"
-            style={{ background: "rgba(10, 10, 10, 0.7)", border: "1px solid rgba(255, 255, 255, 0.08)" }}
+            className="absolute left-2.5 top-2.5 rounded-full px-2 py-0.5 text-[7px] font-bold uppercase tracking-widest text-white bg-red-900 border border-red-500/20 shadow z-10"
           >
-            {product.category}
+            -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%
           </span>
-        )}
-
-        {/* Floating Buttons — visible on hover (desktop) or always (mobile touch) */}
-        <div className="absolute right-4 top-4 flex flex-col gap-2.5 z-30
-          sm:translate-x-12 sm:opacity-0 sm:transition-all sm:duration-500 sm:group-hover:translate-x-0 sm:group-hover:opacity-100">
-          <button
-            onClick={handleLike}
-            className="rounded-xl p-2.5 shadow-lg transition border hover:scale-105 active:scale-95"
-            style={{
-              background: "rgba(10, 10, 10, 0.8)",
-              borderColor: isLiked ? "#C8A96A" : "rgba(200, 169, 106, 0.15)",
-              color: isLiked ? "#C8A96A" : "#F5F0E8",
-            }}
-            aria-label="Add to wishlist"
-          >
-            <Heart size={15} fill={isLiked ? "#C8A96A" : "transparent"} />
-          </button>
-
-          <Link
-            href={`/product/${product.id}`}
-            className="rounded-xl p-2.5 shadow-lg transition border hover:scale-105 active:scale-95"
-            style={{
-              background: "rgba(10, 10, 10, 0.8)",
-              borderColor: "rgba(200, 169, 106, 0.15)",
-              color: "#F5F0E8",
-            }}
-            aria-label="View product"
-          >
-            <Eye size={15} />
-          </Link>
-        </div>
+        ) : null}
       </div>
 
-      {/* Content */}
-      <div className="space-y-3 p-4 sm:p-6 flex flex-col flex-grow">
-        <div className="flex-grow">
+      {/* Info Content Section */}
+      <div className="p-3.5 flex flex-col justify-between flex-grow space-y-2.5">
+        <div className="space-y-1">
           <Link href={`/product/${product.id}`}>
             <h3
-              className="text-sm sm:text-base font-bold transition hover:text-[#C8A96A] line-clamp-1"
-              style={{ fontFamily: "var(--font-playfair)", color: "var(--text-primary)" }}
+              className="text-[11px] md:text-xs font-bold text-[#F8F6F2] line-clamp-1 group-hover:text-[#C8A14A] transition-colors uppercase tracking-wider"
+              style={{ fontFamily: "var(--font-playfair)" }}
             >
               {product.name}
             </h3>
           </Link>
 
-          {product.description && (
-            <p className="mt-1 line-clamp-1 sm:line-clamp-2 text-[11px] sm:text-xs hidden sm:block" style={{ color: "var(--text-secondary)" }}>
-              {product.description}
-            </p>
-          )}
-        </div>
-
-        {/* Rating */}
-        <div className="flex items-center gap-0.5">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <Star
-              key={index}
-              size={10}
-              fill={index < product.rating ? "#C8A96A" : "transparent"}
-              color={index < product.rating ? "#C8A96A" : "#3e372e"}
-            />
-          ))}
-
-          <span className="ml-1.5 text-[9px] font-semibold tracking-wider text-gray-500">
-            ({product.rating}.0)
-          </span>
-        </div>
-
-        {/* Price & Stock */}
-        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 pt-0.5">
-          <div className="flex items-baseline gap-1.5 flex-wrap">
-            <span className="text-sm sm:text-base font-bold" style={{ color: "var(--text-primary)" }}>
-              Rs. {product.price.toLocaleString()}
-            </span>
-
-            {product.oldPrice != null && product.oldPrice > product.price && (
-              <span className="text-[10px] line-through text-gray-500">
-                Rs. {product.oldPrice.toLocaleString()}
+          {/* Price & Rating row */}
+          <div className="flex justify-between items-baseline gap-1">
+            <div className="flex items-baseline gap-1">
+              <span className="text-[11px] md:text-xs font-bold text-[#C8A14A] font-mono">
+                Rs. {product.price.toLocaleString()}
               </span>
-            )}
-          </div>
+              {product.oldPrice && product.oldPrice > product.price ? (
+                <span className="text-[8px] line-through text-stone-500 font-mono">
+                  Rs. {product.oldPrice.toLocaleString()}
+                </span>
+              ) : null}
+            </div>
 
-          <div>
-            {product.stock && product.stock > 0 ? (
-              <span className="text-[9px] font-bold uppercase tracking-widest text-emerald-500">
-                In Stock
-              </span>
-            ) : (
-              <span className="text-[9px] font-bold uppercase tracking-widest text-rose-500">
-                Out of Stock
-              </span>
-            )}
+            <div className="flex items-center gap-0.5">
+              <Star size={9} fill="#C8A14A" className="text-[#C8A14A]" />
+              <span className="text-[8px] text-[#A5A5A5] font-semibold">{product.rating % 1 === 0 ? product.rating : product.rating.toFixed(1)}</span>
+            </div>
           </div>
         </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-2 pt-1">
-          <button
-            onClick={handleAddToCart}
-            disabled={!product.stock || product.stock === 0}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
-            style={{
-              background: "linear-gradient(135deg, #1c1c1c, #111111)",
-              border: "1px solid rgba(200, 169, 106, 0.15)",
-              color: "white",
-            }}
-            onMouseEnter={(e) => {
-              if (product.stock && product.stock > 0) {
-                e.currentTarget.style.background = "linear-gradient(135deg, #C8A96A, #8B6914)";
-                e.currentTarget.style.borderColor = "transparent";
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (product.stock && product.stock > 0) {
-                e.currentTarget.style.background = "linear-gradient(135deg, #1c1c1c, #111111)";
-                e.currentTarget.style.borderColor = "rgba(200, 169, 106, 0.15)";
-              }
-            }}
-          >
-            <ShoppingBag size={12} />
-            Add to Cart
-          </button>
-
-          <button
-            onClick={handleBuyNowWhatsApp}
-            className="rounded-xl px-3 py-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.15em] sm:tracking-[0.2em] transition-all duration-300 flex items-center justify-center cursor-pointer"
-            style={{
-              background: "rgba(255, 255, 255, 0.04)",
-              border: "1px solid rgba(200, 169, 106, 0.15)",
-              color: "var(--text-primary)",
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "#C8A96A")}
-            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(200, 169, 106, 0.15)")}
-          >
-            Buy Now
-          </button>
-        </div>
+        {/* Quick Add Button */}
+        <button
+          onClick={handleAddToCart}
+          disabled={!product.stock || product.stock === 0}
+          className="w-full flex items-center justify-center gap-1 rounded-xl py-2 bg-stone-900 border border-stone-850 hover:bg-[#C8A14A] hover:text-black transition-all duration-300 text-[8px] uppercase tracking-widest font-bold text-stone-300 disabled:opacity-40 disabled:pointer-events-none cursor-pointer"
+        >
+          <Plus className="w-2.5 h-2.5" /> Quick Add
+        </button>
       </div>
-    </div>
+    </motion.div>
   );
 }

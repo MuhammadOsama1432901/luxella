@@ -44,7 +44,13 @@ const DEFAULT_ANNOUNCEMENTS: Announcement[] = [
 export default function AnnouncementBar() {
   const [announcements, setAnnouncements] = useState<Announcement[]>(DEFAULT_ANNOUNCEMENTS);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
+  // Check sessionStorage so dismissed state persists across navigation within the session
+  const [isVisible, setIsVisible] = useState(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem("luxella_bar_dismissed") !== "1";
+    }
+    return true;
+  });
   const [isHovered, setIsHovered] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -138,7 +144,10 @@ export default function AnnouncementBar() {
       </div>
 
       <button
-        onClick={() => setIsVisible(false)}
+        onClick={() => {
+          setIsVisible(false);
+          try { sessionStorage.setItem("luxella_bar_dismissed", "1"); } catch { /* ignore */ }
+        }}
         className="absolute right-4 top-1/2 -translate-y-1/2 text-[#0F0F10]/60 hover:text-[#0F0F10] transition-colors p-1"
         aria-label="Dismiss announcement"
       >

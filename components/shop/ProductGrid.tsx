@@ -153,14 +153,17 @@ export default function ProductGrid({
 
     // Sorting
     switch (sort) {
+      case "price_asc":
       case "Price Low → High":
         filtered.sort((a, b) => a.price - b.price);
         break;
 
+      case "price_desc":
       case "Price High → Low":
         filtered.sort((a, b) => b.price - a.price);
         break;
 
+      case "rating":
       case "Highest Rated":
       case "Most Popular":
         filtered.sort((a, b) => b.rating - a.rating);
@@ -185,68 +188,41 @@ export default function ProductGrid({
 
   if (loading) {
     return (
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <div className="flex justify-center items-center py-12">
-          {/* Skeleton Loaders */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="animate-pulse bg-[#121212] rounded-3xl p-4 border border-white/5 space-y-4">
-                <div className="aspect-square bg-white/5 rounded-2xl" />
-                <div className="h-4 bg-white/10 rounded w-2/3" />
-                <div className="h-3 bg-white/5 rounded w-1/2" />
-                <div className="flex justify-between items-center pt-2">
-                  <div className="h-4 bg-white/10 rounded w-1/3" />
-                  <div className="h-8 bg-white/10 rounded-xl w-1/2" />
-                </div>
-              </div>
-            ))}
+      <div className="grid grid-cols-2 gap-4 py-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="animate-pulse bg-[#121212] rounded-[18px] border border-stone-850 overflow-hidden">
+            <div className="aspect-square bg-stone-900" />
+            <div className="p-3.5 space-y-2">
+              <div className="h-3 bg-stone-800 rounded w-3/4" />
+              <div className="h-3 bg-stone-800 rounded w-1/2" />
+              <div className="h-8 bg-stone-800 rounded-xl" />
+            </div>
           </div>
-        </div>
-      </section>
+        ))}
+      </div>
     );
   }
 
   if (filteredProducts.length === 0) {
     return (
-      <section className="mx-auto max-w-7xl px-6 py-20">
-        <div
-          className="rounded-3xl p-16 text-center border border-dashed"
-          style={{
-            background: "var(--bg-elevated)",
-            borderColor: "rgba(200, 169, 106, 0.15)",
-          }}
-        >
-          <h2 className="text-2xl font-bold" style={{ fontFamily: "var(--font-playfair)", color: "var(--text-primary)" }}>
-            No Products Found
-          </h2>
-          <p className="mt-3 text-sm text-gray-500">
-            Try resetting your filters or typing different search terms.
-          </p>
-        </div>
-      </section>
+      <div className="py-16 text-center">
+        <p className="text-[11px] font-bold uppercase tracking-widest text-stone-500">No Products Found</p>
+        <p className="text-[10px] text-stone-600 mt-2">Try resetting filters or different search terms.</p>
+      </div>
     );
   }
 
   return (
-    <section className="mx-auto max-w-7xl px-0 py-8">
-      {/* Header */}
-      <div className="mb-10 flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold" style={{ fontFamily: "var(--font-playfair)", color: "var(--text-primary)" }}>
-            Products
-          </h2>
-          <p className="mt-1 text-xs uppercase tracking-wider font-semibold text-gray-500">
-            {filteredProducts.length} Exquisite pieces matched
-          </p>
-        </div>
-      </div>
-
-      {/* Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+    <div className="py-2">
+      <p className="text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-4">
+        {filteredProducts.length} piece{filteredProducts.length !== 1 ? 's' : ''} found
+      </p>
+      {/* 2-column grid — works perfectly in the 430px mobile container */}
+      <div className="grid grid-cols-2 gap-4">
         {filteredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
-    </section>
+    </div>
   );
 }

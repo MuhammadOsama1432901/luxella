@@ -62,7 +62,12 @@ export default function Footer() {
         
         {/* ── Desktop & Tablet Layout (Responsive Grid) ───────────────── */}
         {/* Changed from md:grid-cols-4 to sm:grid-cols-2 lg:grid-cols-4 to optimize layouts on medium viewports */}
-        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 pb-12 border-b border-white/5">
+        {/* 
+          NOTE: In the 430px mobile-first container, both desktop and mobile layouts
+          are effectively at "mobile" width. We always show the compact accordion layout.
+          The full grid layout is kept for reference but hidden via CSS.
+        */}
+        <div className="hidden lg:grid lg:grid-cols-4 gap-12 lg:gap-8 pb-12 border-b border-white/5">
           {/* Logo & Info */}
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-3 group">
@@ -228,8 +233,8 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* ── Mobile Layout (accordions) ─────────────────────────────── */}
-        <div className="sm:hidden space-y-5">
+        {/* ── Mobile & App Layout (always shown in 430px container) ─────────────────────────────── */}
+        <div className="lg:hidden space-y-5">
           
           {/* Logo & Description */}
           <div className="text-center space-y-4 pb-4 border-b border-white/5">
@@ -249,14 +254,14 @@ export default function Footer() {
 
             {/* Mobile Social Buttons */}
             <div className="flex items-center justify-center gap-4">
-              <a href="https://instagram.com" className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 text-[#C8A96A] bg-white/5">
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 text-[#C8A96A] bg-white/5">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
                   <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
                   <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
                 </svg>
               </a>
-              <a href="https://facebook.com" className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 text-[#C8A96A] bg-white/5">
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10 text-[#C8A96A] bg-white/5">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
                 </svg>

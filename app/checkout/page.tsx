@@ -70,6 +70,7 @@ export default function CheckoutPage() {
   const [epTxnId, setEpTxnId] = useState("");
   const [upgradeGift, setUpgradeGift] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [step, setStep] = useState(1);
 
   // Coupon States
   const [couponCode, setCouponCode] = useState("");
@@ -242,11 +243,62 @@ export default function CheckoutPage() {
     );
   }
 
-  // Redirect if cart is empty
-  if (cart.length === 0) {
-    router.replace("/shop");
+  // Redirect if cart is empty (use useEffect to avoid render-time navigation)
+  useEffect(() => {
+    if (mounted && cart.length === 0) {
+      router.replace("/shop");
+    }
+  }, [mounted, cart.length, router]);
+
+  if (mounted && cart.length === 0) {
     return null;
   }
+
+  const validateStep1 = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !phone.trim() || !address.trim()) {
+      toast.error("Please fill in all required shipping fields.");
+      return;
+    }
+    const cleanPhone = phone.replace(/[^0-9+]/g, "");
+    if (cleanPhone.length < 10) {
+      toast.error("Please enter a valid phone number.");
+      return;
+    }
+    setStep(2);
+  };
+
+  const validateStep2 = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (paymentMethod === "Credit Card") {
+      if (!cardName.trim() || !cardNumber.trim() || !cardExpiry.trim() || !cardCvv.trim()) {
+        toast.error("Please fill in all credit card details.");
+        return;
+      }
+      if (!validateCardNumber(cardNumber)) {
+        toast.error("Invalid credit card number.");
+        return;
+      }
+      if (!/^\d{2}\/\d{2}$/.test(cardExpiry)) {
+        toast.error("MM/YY expiry format required.");
+        return;
+      }
+      if (cardCvv.length < 3) {
+        toast.error("Invalid CVV.");
+        return;
+      }
+    } else if (paymentMethod === "EasyPaisa") {
+      if (!epWalletNumber.trim()) {
+        toast.error("Please enter your EasyPaisa phone number.");
+        return;
+      }
+      if (epWalletNumber.replace(/\D/g, "").length < 10) {
+        toast.error("Invalid EasyPaisa phone number.");
+        return;
+      }
+    }
+    setStep(3);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -372,556 +424,284 @@ export default function CheckoutPage() {
     <>
       <Navbar />
 
-      <main className="min-h-screen py-16 px-4 sm:px-6" style={{ background: "var(--bg-base)" }}>
-        <div className="max-w-7xl mx-auto">
-          {/* Back to Cart link */}
-          <Link
-            href="/cart"
-            className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest mb-8 transition-colors"
-            style={{ color: "var(--text-secondary)" }}
-          >
-            <ArrowLeft size={14} style={{ color: "#C8A96A" }} />
-            Back to Cart
-          </Link>
+      <main className="bg-[#0B0B0C] text-[#F8F6F2] min-h-screen pb-24 relative pt-4">
+        <div className="px-4 py-4 space-y-6">
 
-          <div className="grid lg:grid-cols-5 gap-8 lg:gap-12 items-start">
-            {/* Left Column: Form Details (3/5 width) */}
-            <div
-              className="lg:col-span-3 rounded-3xl p-6 sm:p-10 border shadow-2xl space-y-8"
-              style={{
-                background: "var(--bg-elevated)",
-                borderColor: "rgba(200, 169, 106, 0.12)",
-              }}
-            >
-              <div>
-                <span className="text-[10px] uppercase tracking-[0.25em] font-bold mb-2 block" style={{ color: "#C8A96A" }}>
-                  ✦ Secure Boutique checkout
-                </span>
-                <h2
-                  className="text-2xl font-bold tracking-wide"
-                  style={{ fontFamily: "var(--font-playfair)", color: "var(--text-primary)" }}
-                >
-                  Delivery &amp; Payment Details
-                </h2>
-                <div className="gold-divider w-16 mt-4 opacity-55" />
+          {/* Minimal header */}
+          <div className="flex items-center justify-between border-b border-stone-900 pb-3">
+            <button onClick={() => router.back()} className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-stone-500">
+              <ArrowLeft className="w-3.5 h-3.5" /> Back
+            </button>
+            <h1 className="text-sm font-bold uppercase tracking-widest text-[#F8F6F2]">Secure Checkout</h1>
+            <span className="text-[8px] uppercase tracking-wider text-stone-600">Step {step} of 3</span>
+          </div>
+
+          {/* Step indicators */}
+          <div className="grid grid-cols-3 gap-2 text-center text-[9px] font-bold uppercase tracking-wider">
+            <div className={`pb-2 border-b-2 transition-all ${step >= 1 ? "border-[#C8A14A] text-white" : "border-stone-850 text-stone-500"}`}>
+              1. Address
+            </div>
+            <div className={`pb-2 border-b-2 transition-all ${step >= 2 ? "border-[#C8A14A] text-white" : "border-stone-850 text-stone-500"}`}>
+              2. Payment
+            </div>
+            <div className={`pb-2 border-b-2 transition-all ${step >= 3 ? "border-[#C8A14A] text-white" : "border-stone-850 text-stone-500"}`}>
+              3. Review
+            </div>
+          </div>
+
+          {/* STEP 1: Address & Details */}
+          {step === 1 && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="space-y-1">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white">Shipping Address</h3>
+                <p className="text-[9px] text-stone-500">Enter where we should ship your jewelry parcel</p>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* ── SECTION 1: CUSTOMER DETAILS ── */}
-                <div className="space-y-4">
-                  <h3 className="text-xs uppercase tracking-widest font-bold border-b pb-2" style={{ color: "var(--text-secondary)", borderColor: "rgba(255,255,255,0.06)" }}>
-                    1. Shipping Information
-                  </h3>
-                  
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {/* Name */}
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
-                        Full Name <span className="text-red-500">*</span>
-                      </label>
+              <div className="space-y-3.5 text-xs">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[9px] uppercase font-bold text-stone-400">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Muhammad Osama"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="rounded-xl px-4 py-3 bg-stone-950 border border-stone-850 text-white outline-none focus:border-[#C8A14A]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[9px] uppercase font-bold text-stone-400">WhatsApp / Phone *</label>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="e.g. 03495804586"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="rounded-xl px-4 py-3 bg-stone-950 border border-stone-850 text-white outline-none focus:border-[#C8A14A]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[9px] uppercase font-bold text-stone-400">Email Address (Optional)</label>
+                  <input
+                    type="email"
+                    placeholder="e.g. osama@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="rounded-xl px-4 py-3 bg-stone-950 border border-stone-850 text-white outline-none focus:border-[#C8A14A]"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[9px] uppercase font-bold text-stone-400">Street Address *</label>
+                  <textarea
+                    required
+                    placeholder="House number, street name, sector / area details..."
+                    rows={3}
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="rounded-xl px-4 py-3 bg-stone-950 border border-stone-850 text-white outline-none focus:border-[#C8A14A] resize-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[9px] uppercase font-bold text-stone-400">City *</label>
+                  <select
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    className="rounded-xl px-4 py-3 bg-stone-950 border border-stone-850 text-white outline-none focus:border-[#C8A14A]"
+                  >
+                    {PAK_CITIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={validateStep1}
+                className="w-full py-3.5 bg-[#C8A14A] hover:bg-[#b09241] text-black rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all duration-300 mt-4 cursor-pointer"
+              >
+                Continue to Payment
+              </button>
+            </div>
+          )}
+
+          {/* STEP 2: Payment Option Selection */}
+          {step === 2 && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="space-y-1">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white">Payment Method</h3>
+                <p className="text-[9px] text-stone-500">Select how you prefer to settle this security order</p>
+              </div>
+
+              <div className="space-y-3.5 text-xs">
+                {/* Method Options Selector list */}
+                <div className="grid grid-cols-1 gap-2.5">
+                  {[
+                    { key: "Cash on Delivery", label: "💵 Cash on Delivery (COD)" },
+                    { key: "Bank Transfer", label: "🏛️ Direct Bank Transfer" },
+                    { key: "EasyPaisa", label: "📱 EasyPaisa Wallet Transfer" },
+                    { key: "Credit Card", label: "💳 Credit / Debit Card" }
+                  ].map((method) => (
+                    <button
+                      key={method.key}
+                      type="button"
+                      onClick={() => setPaymentMethod(method.key)}
+                      className={`w-full py-3 px-4 rounded-xl text-left font-bold border transition-all cursor-pointer ${
+                        paymentMethod === method.key ? "border-[#C8A14A] bg-[#C8A14A]/5 text-[#C8A14A]" : "border-stone-850 bg-stone-950 text-stone-400"
+                      }`}
+                    >
+                      {method.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Sub-inputs based on payment choice */}
+                {paymentMethod === "Bank Transfer" && (
+                  <div className="p-4 bg-stone-950 border border-stone-850 rounded-xl space-y-2 text-[10px]">
+                    <p className="font-bold text-[#C8A14A] uppercase tracking-wider text-[8px]">Luxella Bank Details</p>
+                    <p className="text-stone-300">Bank: <span className="font-bold text-white">{BANK_DETAILS.bankName}</span></p>
+                    <p className="text-stone-300">Title: <span className="font-bold text-white">{BANK_DETAILS.accountTitle}</span></p>
+                    <p className="text-stone-300">Account: <span className="font-bold text-white">{BANK_DETAILS.accountNumber}</span></p>
+                    <p className="text-[8px] text-stone-500 uppercase tracking-wide border-t border-stone-900 pt-2 mt-2">
+                      💡 Please send payment screenshot on WhatsApp after placing order to confirm.
+                    </p>
+                  </div>
+                )}
+
+                {paymentMethod === "EasyPaisa" && (
+                  <div className="p-4 bg-stone-950 border border-stone-850 rounded-xl space-y-3">
+                    <p className="font-bold text-[#C8A14A] uppercase tracking-wider text-[8px]">{settings?.easyPaisaAccountTitle || "Luxella EasyPaisa wallet"}</p>
+                    <p className="text-[10px] text-stone-300">Number: <span className="font-bold text-white">{settings?.easyPaisaMerchantId || "03495804586"}</span></p>
+                    
+                    <div className="grid grid-cols-2 gap-2 border-t border-stone-900 pt-3">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[8px] uppercase font-bold text-stone-500">Your Phone *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="03xxxxxxxxx"
+                          value={epWalletNumber}
+                          onChange={(e) => setEpWalletNumber(e.target.value)}
+                          className="rounded-lg px-2.5 py-2 bg-stone-950 border border-stone-850 text-white outline-none"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[8px] uppercase font-bold text-stone-500">Transaction ID (TID)</label>
+                        <input
+                          type="text"
+                          placeholder="Optional"
+                          value={epTxnId}
+                          onChange={(e) => setEpTxnId(e.target.value)}
+                          className="rounded-lg px-2.5 py-2 bg-stone-950 border border-stone-850 text-white outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {paymentMethod === "Credit Card" && (
+                  <div className="p-4 bg-stone-950 border border-stone-850 rounded-xl space-y-3">
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[8px] uppercase font-bold text-stone-500">Cardholder Name *</label>
                       <input
                         type="text"
                         required
                         placeholder="e.g. Osama Afzal"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="rounded-xl px-4 py-3 text-xs outline-none transition w-full"
-                        style={{
-                          background: "rgba(255, 255, 255, 0.03)",
-                          border: "1px solid rgba(200, 169, 106, 0.15)",
-                          color: "var(--text-primary)",
-                        }}
+                        value={cardName}
+                        onChange={(e) => setCardName(e.target.value)}
+                        className="rounded-lg px-3 py-2 bg-stone-950 border border-stone-850 text-white outline-none"
                       />
                     </div>
-
-                    {/* Phone */}
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
-                        WhatsApp Number <span className="text-red-500">*</span>
-                      </label>
+                    <div className="flex flex-col gap-1">
+                      <label className="text-[8px] uppercase font-bold text-stone-500">Card Number *</label>
                       <input
-                        type="tel"
+                        type="text"
                         required
-                        placeholder="e.g. 03495804586"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        className="rounded-xl px-4 py-3 text-xs outline-none transition w-full"
-                        style={{
-                          background: "rgba(255, 255, 255, 0.03)",
-                          border: "1px solid rgba(200, 169, 106, 0.15)",
-                          color: "var(--text-primary)",
-                        }}
+                        placeholder="xxxx xxxx xxxx xxxx"
+                        value={cardNumber}
+                        onChange={handleCardNumberChange}
+                        className="rounded-lg px-3 py-2 bg-stone-950 border border-stone-850 text-white outline-none font-mono"
                       />
                     </div>
-                  </div>
-
-                  {/* Email */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
-                      Email Address (Optional)
-                    </label>
-                    <input
-                      type="email"
-                      placeholder="e.g. osama@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="rounded-xl px-4 py-3 text-xs outline-none transition w-full"
-                      style={{
-                        background: "rgba(255, 255, 255, 0.03)",
-                        border: "1px solid rgba(200, 169, 106, 0.15)",
-                        color: "var(--text-primary)",
-                      }}
-                    />
-                  </div>
-
-                  {/* Street Address */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
-                      Shipping Address <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      required
-                      placeholder="Street address, house number, area details..."
-                      rows={2.5}
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      className="rounded-xl px-4 py-3 text-xs outline-none transition w-full resize-none"
-                      style={{
-                        background: "rgba(255, 255, 255, 0.03)",
-                        border: "1px solid rgba(200, 169, 106, 0.15)",
-                        color: "var(--text-primary)",
-                      }}
-                    />
-                  </div>
-
-                  {/* City */}
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-[10px] uppercase font-bold tracking-wider text-gray-500">
-                      City <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className="rounded-xl px-4 py-3 text-xs outline-none transition w-full"
-                      style={{
-                        background: "rgba(255, 255, 255, 0.03)",
-                        border: "1px solid rgba(200, 169, 106, 0.15)",
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      {PAK_CITIES.map((c) => (
-                        <option key={c} value={c} className="bg-[#111] text-white">
-                          {c}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* ── SECTION 2: PAYMENT METHODS ── */}
-                <div className="space-y-4 pt-4">
-                  <h3 className="text-xs uppercase tracking-widest font-bold border-b pb-2" style={{ color: "var(--text-secondary)", borderColor: "rgba(255,255,255,0.06)" }}>
-                    2. Payment Method
-                  </h3>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* COD Option */}
-                    <label
-                      className="flex items-center gap-3.5 border p-4 rounded-xl cursor-pointer transition-all duration-300"
-                      style={{
-                        background: paymentMethod === "Cash on Delivery" ? "rgba(200, 169, 106, 0.06)" : "rgba(255,255,255,0.02)",
-                        borderColor: paymentMethod === "Cash on Delivery" ? "#C8A96A" : "rgba(200, 169, 106, 0.15)",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        checked={paymentMethod === "Cash on Delivery"}
-                        onChange={() => setPaymentMethod("Cash on Delivery")}
-                        className="sr-only"
-                      />
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center border"
-                        style={{
-                          background: paymentMethod === "Cash on Delivery" ? "linear-gradient(135deg,#C8A96A,#8B6914)" : "rgba(255,255,255,0.05)",
-                          borderColor: paymentMethod === "Cash on Delivery" ? "transparent" : "rgba(200,169,106,0.15)",
-                          color: paymentMethod === "Cash on Delivery" ? "#111" : "#C8A96A",
-                        }}
-                      >
-                        <Truck size={18} />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[8px] uppercase font-bold text-stone-500">Expiry *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="MM/YY"
+                          value={cardExpiry}
+                          onChange={handleExpiryChange}
+                          className="rounded-lg px-3 py-2 bg-stone-950 border border-stone-850 text-white outline-none text-center"
+                        />
                       </div>
-                      <div>
-                        <p className="font-bold text-xs" style={{ color: "var(--text-primary)" }}>Cash on Delivery</p>
-                        <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Pay at your doorstep</p>
-                      </div>
-                    </label>
-
-                    {/* Bank Transfer Option */}
-                    <label
-                      className="flex items-center gap-3.5 border p-4 rounded-xl cursor-pointer transition-all duration-300"
-                      style={{
-                        background: paymentMethod === "Bank Transfer" ? "rgba(200, 169, 106, 0.06)" : "rgba(255,255,255,0.02)",
-                        borderColor: paymentMethod === "Bank Transfer" ? "#C8A96A" : "rgba(200, 169, 106, 0.15)",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        checked={paymentMethod === "Bank Transfer"}
-                        onChange={() => setPaymentMethod("Bank Transfer")}
-                        className="sr-only"
-                      />
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center border"
-                        style={{
-                          background: paymentMethod === "Bank Transfer" ? "linear-gradient(135deg,#C8A96A,#8B6914)" : "rgba(255,255,255,0.05)",
-                          borderColor: paymentMethod === "Bank Transfer" ? "transparent" : "rgba(200,169,106,0.15)",
-                          color: paymentMethod === "Bank Transfer" ? "#111" : "#C8A96A",
-                        }}
-                      >
-                        <Landmark size={18} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-xs" style={{ color: "var(--text-primary)" }}>Bank Transfer</p>
-                        <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Transfer to bank account</p>
-                      </div>
-                    </label>
-
-                    {/* EasyPaisa Wallet Option */}
-                    <label
-                      className="flex items-center gap-3.5 border p-4 rounded-xl cursor-pointer transition-all duration-300"
-                      style={{
-                        background: paymentMethod === "EasyPaisa" ? "rgba(200, 169, 106, 0.06)" : "rgba(255,255,255,0.02)",
-                        borderColor: paymentMethod === "EasyPaisa" ? "#C8A96A" : "rgba(200, 169, 106, 0.15)",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        checked={paymentMethod === "EasyPaisa"}
-                        onChange={() => setPaymentMethod("EasyPaisa")}
-                        className="sr-only"
-                      />
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center border"
-                        style={{
-                          background: paymentMethod === "EasyPaisa" ? "linear-gradient(135deg,#C8A96A,#8B6914)" : "rgba(255,255,255,0.05)",
-                          borderColor: paymentMethod === "EasyPaisa" ? "transparent" : "rgba(200,169,106,0.15)",
-                          color: paymentMethod === "EasyPaisa" ? "#111" : "#C8A96A",
-                        }}
-                      >
-                        <Smartphone size={18} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-xs" style={{ color: "var(--text-primary)" }}>EasyPaisa Wallet</p>
-                        <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Mobile wallet checkout</p>
-                      </div>
-                    </label>
-
-                    {/* Credit Card / Stripe Option */}
-                    <label
-                      className="flex items-center gap-3.5 border p-4 rounded-xl cursor-pointer transition-all duration-300"
-                      style={{
-                        background: paymentMethod === "Credit Card" ? "rgba(200, 169, 106, 0.06)" : "rgba(255,255,255,0.02)",
-                        borderColor: paymentMethod === "Credit Card" ? "#C8A96A" : "rgba(200, 169, 106, 0.15)",
-                      }}
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        checked={paymentMethod === "Credit Card"}
-                        onChange={() => setPaymentMethod("Credit Card")}
-                        className="sr-only"
-                      />
-                      <div
-                        className="w-10 h-10 rounded-xl flex items-center justify-center border"
-                        style={{
-                          background: paymentMethod === "Credit Card" ? "linear-gradient(135deg,#C8A96A,#8B6914)" : "rgba(255,255,255,0.05)",
-                          borderColor: paymentMethod === "Credit Card" ? "transparent" : "rgba(200,169,106,0.15)",
-                          color: paymentMethod === "Credit Card" ? "#111" : "#C8A96A",
-                        }}
-                      >
-                        <CreditCard size={18} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-xs" style={{ color: "var(--text-primary)" }}>Credit / Debit Card</p>
-                        <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>Pay instantly via Stripe</p>
-                      </div>
-                    </label>
-                  </div>
-
-                  {/* ── PAYMENT DETAIL CONTAINERS ── */}
-
-                  {/* 1. Bank Transfer details */}
-                  {paymentMethod === "Bank Transfer" && (
-                    <div
-                      className="rounded-2xl p-5 text-xs space-y-2.5 border leading-relaxed animate-fadeIn"
-                      style={{
-                        background: "rgba(200,169,106,0.03)",
-                        borderColor: "rgba(200,169,106,0.2)",
-                      }}
-                    >
-                      <div className="flex items-center gap-2 mb-1">
-                        <Landmark size={14} style={{ color: "#C8A96A" }} />
-                        <span className="font-bold uppercase tracking-wider text-[10px]" style={{ color: "var(--text-primary)" }}>Direct Bank Details</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-gray-400">
-                        <span>Bank Name:</span>
-                        <span className="font-semibold text-white">{BANK_DETAILS.bankName}</span>
-                        <span>Account Title:</span>
-                        <span className="font-semibold text-white">{BANK_DETAILS.accountTitle}</span>
-                        <span>Account Number:</span>
-                        <span className="font-bold text-[#C8A96A]">{BANK_DETAILS.accountNumber}</span>
-                        <span>IBAN:</span>
-                        <span className="font-semibold text-white text-[10px] break-all">{BANK_DETAILS.iban}</span>
-                      </div>
-                      <p className="text-[9px] uppercase tracking-wider border-t pt-2 mt-2" style={{ color: "var(--text-muted)", borderColor: "rgba(255,255,255,0.05)" }}>
-                        💡 Please transfer the total amount and send a screenshot of the receipt on WhatsApp to confirm your bank transfer.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* 2. EasyPaisa instructions */}
-                  {paymentMethod === "EasyPaisa" && (
-                    <div
-                      className="rounded-2xl p-5 text-xs space-y-4 border animate-fadeIn"
-                      style={{
-                        background: "rgba(200,169,106,0.03)",
-                        borderColor: "rgba(200,169,106,0.2)",
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <Smartphone size={14} style={{ color: "#C8A96A" }} />
-                        <span className="font-bold uppercase tracking-wider text-[10px]" style={{ color: "var(--text-primary)" }}>EasyPaisa Transfer</span>
-                      </div>
-
-                      <div className="text-gray-400 space-y-1">
-                        <p>Merchant Wallet ID: <span className="font-bold text-[#C8A96A]">{settings?.easyPaisaMerchantId || "03495804586"}</span></p>
-                        <p>Account Title: <span className="font-semibold text-white">Luxella Boutique</span></p>
-                      </div>
-
-                      <div className="grid sm:grid-cols-2 gap-4 border-t pt-4" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-[9px] uppercase font-bold text-gray-500">Your EasyPaisa Phone *</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="03xxxxxxxxx"
-                            value={epWalletNumber}
-                            onChange={(e) => setEpWalletNumber(e.target.value)}
-                            className="rounded-lg px-3 py-2 bg-white/5 border border-white/10 text-white outline-none focus:border-[#C8A96A]"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-[9px] uppercase font-bold text-gray-500">Transaction ID (TID)</label>
-                          <input
-                            type="text"
-                            placeholder="Optional"
-                            value={epTxnId}
-                            onChange={(e) => setEpTxnId(e.target.value)}
-                            className="rounded-lg px-3 py-2 bg-white/5 border border-white/10 text-white outline-none focus:border-[#C8A96A]"
-                          />
-                        </div>
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[8px] uppercase font-bold text-stone-500">CVV *</label>
+                        <input
+                          type="password"
+                          required
+                          placeholder="***"
+                          value={cardCvv}
+                          onChange={handleCvvChange}
+                          className="rounded-lg px-3 py-2 bg-stone-950 border border-stone-850 text-white outline-none text-center"
+                        />
                       </div>
                     </div>
-                  )}
+                  </div>
+                )}
+              </div>
 
-                  {/* 3. Credit Card Payment inputs */}
-                  {paymentMethod === "Credit Card" && (
-                    <div
-                      className="rounded-2xl p-5 space-y-4 border animate-fadeIn text-xs"
-                      style={{
-                        background: "rgba(255,255,255,0.02)",
-                        borderColor: "rgba(200,169,106,0.15)",
-                      }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <CreditCard size={14} style={{ color: "#C8A96A" }} />
-                          <span className="font-bold uppercase tracking-wider text-[10px]" style={{ color: "var(--text-primary)" }}>Secure Card Details</span>
-                        </div>
-                        <div className="flex gap-1.5 opacity-60">
-                          <span className="text-[8px] border px-1 py-0.5 rounded font-bold text-white border-white/20">VISA</span>
-                          <span className="text-[8px] border px-1 py-0.5 rounded font-bold text-white border-white/20">MC</span>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-[9px] uppercase font-bold text-gray-500">Cardholder Name *</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="Name on card"
-                            value={cardName}
-                            onChange={(e) => setCardName(e.target.value)}
-                            className="rounded-lg px-3 py-2 bg-white/5 border border-white/10 text-white outline-none focus:border-[#C8A96A]"
-                          />
-                        </div>
-
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-[9px] uppercase font-bold text-gray-500">Card Number *</label>
-                          <input
-                            type="text"
-                            required
-                            placeholder="xxxx xxxx xxxx xxxx"
-                            value={cardNumber}
-                            onChange={handleCardNumberChange}
-                            className="rounded-lg px-3 py-2 bg-white/5 border border-white/10 text-white outline-none focus:border-[#C8A96A] font-mono tracking-widest"
-                          />
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-[9px] uppercase font-bold text-gray-500">Expiry Date *</label>
-                            <input
-                              type="text"
-                              required
-                              placeholder="MM/YY"
-                              value={cardExpiry}
-                              onChange={handleExpiryChange}
-                              className="rounded-lg px-3 py-2 bg-white/5 border border-white/10 text-white outline-none focus:border-[#C8A96A] text-center"
-                            />
-                          </div>
-                          <div className="flex flex-col gap-1.5">
-                            <label className="text-[9px] uppercase font-bold text-gray-500">CVV / CVC *</label>
-                            <input
-                              type="password"
-                              required
-                              placeholder="***"
-                              value={cardCvv}
-                              onChange={handleCvvChange}
-                              className="rounded-lg px-3 py-2 bg-white/5 border border-white/10 text-white outline-none focus:border-[#C8A96A] text-center font-mono"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-1.5 text-[9px] text-gray-500">
-                        <CheckCircle size={10} className="text-emerald-400" />
-                        <span>🔒 256-bit SSL encrypted connection. Powered by Stripe.</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Submit button */}
+              <div className="grid grid-cols-2 gap-3 mt-4">
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full flex items-center justify-center gap-2.5 rounded-2xl py-4.5 text-xs font-bold uppercase tracking-[0.2em] text-white transition-all duration-300 hover:scale-[1.01] hover:shadow-xl active:scale-100 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                  style={{
-                    background: "linear-gradient(135deg, #C8A96A, #8B6914)",
-                    boxShadow: "0 8px 30px rgba(200, 169, 106, 0.25)",
-                  }}
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="py-3.5 bg-stone-950 border border-stone-850 text-stone-400 rounded-xl text-[9px] font-bold uppercase tracking-wider cursor-pointer"
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="animate-spin h-4 w-4" />
-                      Processing Security Transaction...
-                    </>
-                  ) : (
-                    <>
-                      Place order (Rs. {grandTotal.toLocaleString()})
-                    </>
-                  )}
+                  Back to Address
                 </button>
-              </form>
+                <button
+                  type="button"
+                  onClick={validateStep2}
+                  className="py-3.5 bg-[#C8A14A] hover:bg-[#b09241] text-black rounded-xl text-[9px] font-bold uppercase tracking-wider cursor-pointer"
+                >
+                  Continue to Review
+                </button>
+              </div>
             </div>
+          )}
 
-            {/* Right Column: Order Summary (2/5 width) */}
-            <div
-              className="lg:col-span-2 rounded-3xl p-6 sm:p-8 border shadow-2xl space-y-6 lg:sticky lg:top-28"
-              style={{
-                background: "var(--bg-elevated)",
-                borderColor: "rgba(200, 169, 106, 0.12)",
-              }}
-            >
-              <h3
-                className="text-lg font-bold tracking-wide border-b pb-4"
-                style={{ fontFamily: "var(--font-playfair)", color: "var(--text-primary)", borderColor: "rgba(255,255,255,0.06)" }}
-              >
-                Order Review
-              </h3>
+          {/* STEP 3: Order Review & Submit */}
+          {step === 3 && (
+            <div className="space-y-4 animate-fadeIn">
+              <div className="space-y-1">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-white">Order Summary Review</h3>
+                <p className="text-[9px] text-stone-500">Review your final statements and confirm dispatch</p>
+              </div>
 
               {/* Items List */}
-              <div className="divide-y divide-white/5 max-h-[300px] overflow-y-auto pr-2">
+              <div className="divide-y divide-stone-900/60 max-h-[160px] overflow-y-auto pr-1 bg-stone-950 border border-stone-850 rounded-xl p-3">
                 {cart.map((item) => (
-                  <div key={item.product.id} className="py-4 flex gap-4 items-center">
-                    <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 border" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                      <Image
-                        src={item.product.image}
-                        alt={item.product.name}
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="flex-grow min-w-0">
-                      <h4 className="font-bold text-xs line-clamp-1" style={{ color: "var(--text-primary)" }}>
-                        {item.product.name}
-                      </h4>
-                      <p className="text-[10px] mt-0.5" style={{ color: "var(--text-muted)" }}>
-                        Qty: {item.quantity} × Rs. {item.product.price.toLocaleString()}
-                      </p>
-                    </div>
-                    <span className="text-xs font-bold" style={{ color: "var(--text-primary)" }}>
-                      Rs. {(item.product.price * item.quantity).toLocaleString()}
-                    </span>
+                  <div key={item.product.id} className="py-2.5 flex justify-between items-center text-[10px]">
+                    <span className="truncate max-w-[180px] font-semibold text-stone-300">{item.product.name}</span>
+                    <span className="text-stone-500">Qty: {item.quantity}</span>
+                    <span className="font-mono font-bold text-white">Rs. {(item.product.price * item.quantity).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
 
-              {/* Premium Packaging Upsell */}
-              <div
-                className="rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden"
-                style={{
-                  background: upgradeGift ? "rgba(200,169,106,0.05)" : "rgba(255,255,255,0.01)",
-                  borderColor: upgradeGift ? "#C8A96A" : "rgba(200,169,106,0.12)",
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setUpgradeGift(!upgradeGift)}
-                  className="flex items-start gap-3 text-left w-full cursor-pointer group"
-                >
-                  <div
-                    className="w-5 h-5 rounded-md border flex items-center justify-center transition-all flex-shrink-0 mt-0.5"
-                    style={{
-                      borderColor: upgradeGift ? "#C8A96A" : "rgba(255,255,255,0.2)",
-                      background: upgradeGift ? "linear-gradient(135deg, #C8A96A, #8B6914)" : "transparent",
-                    }}
-                  >
-                    {upgradeGift && (
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                        <path d="M20 6L9 17l-5-5" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs font-bold text-white group-hover:text-[#C8A96A] transition-colors">
-                        🎁 Upgrade to Premium Gift Package
-                      </p>
-                      <span className="text-[9px] font-bold text-[#C8A96A] bg-[#C8A96A]/10 px-2 py-0.5 rounded">
-                        + Rs. 499
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-gray-500 mt-1 leading-normal">
-                      Includes a custom velvet-lined gold embossed box, silk wrapping, and a handwritten calligraphy greeting card.
-                    </p>
-                  </div>
-                </button>
-              </div>
-
               {/* Promo Coupon Application Box */}
-              <div className="bg-black/35 border border-stone-850 p-4 rounded-2xl space-y-3">
-                <p className="text-[10px] uppercase tracking-wider font-bold text-stone-400">Apply Promo Code</p>
+              <div className="bg-black/35 border border-stone-850 p-4 rounded-xl space-y-3">
+                <p className="text-[8px] uppercase tracking-wider font-bold text-stone-400">Apply Promo Code</p>
                 {appliedCoupon ? (
-                  <div className="flex items-center justify-between bg-[#C8A96A]/10 border border-[#C8A96A]/20 p-2.5 rounded-xl text-xs">
-                    <div className="flex items-center gap-2">
-                      <Tag className="w-3.5 h-3.5 text-[#C8A96A]" />
+                  <div className="flex items-center justify-between bg-[#C8A96A]/10 border border-[#C8A96A]/20 p-2 rounded-lg text-[10px]">
+                    <div className="flex items-center gap-1.5">
+                      <Tag className="w-3 h-3 text-[#C8A96A]" />
                       <span className="font-mono text-[#C8A96A] font-bold">{appliedCoupon.code}</span>
-                      <span className="text-[10px] text-stone-400">
+                      <span className="text-[8px] text-stone-400">
                         ({appliedCoupon.type === "percentage" ? `${appliedCoupon.value}% OFF` : appliedCoupon.type === "free_shipping" ? "Free Ship" : `Rs. ${appliedCoupon.value} OFF`})
                       </span>
                     </div>
@@ -930,80 +710,82 @@ export default function CheckoutPage() {
                       onClick={handleRemoveCoupon}
                       className="text-stone-400 hover:text-white transition-colors"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ) : (
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      placeholder="e.g. BRIDAL20"
+                      placeholder="e.g. WELCOME10"
                       value={couponCode}
                       onChange={(e) => setCouponCode(e.target.value)}
-                      className="flex-grow rounded-xl px-3 py-2 text-xs outline-none bg-stone-900 border border-stone-800 text-white focus:border-[#C8A96A] uppercase"
+                      className="flex-grow rounded-lg px-2.5 py-1.5 text-[10px] outline-none bg-stone-900 border border-stone-800 text-white focus:border-[#C8A96A] uppercase"
                     />
                     <button
                       type="button"
                       onClick={handleApplyCoupon}
-                      className="bg-stone-900 hover:bg-[#C8A96A] text-stone-300 hover:text-black font-bold text-xs py-2 px-4 rounded-xl border border-stone-800 hover:border-transparent transition-all"
+                      className="bg-[#C8A14A] text-black font-bold text-[9px] px-3.5 py-1.5 rounded-lg transition-all"
                     >
                       Apply
                     </button>
                   </div>
                 )}
-                {couponError && <p className="text-[10px] text-red-400">{couponError}</p>}
+                {couponError && <p className="text-[8px] text-red-400">{couponError}</p>}
               </div>
 
-              {/* Subtotal & Delivery Costs */}
-              <div className="space-y-3.5 text-xs border-t pt-4" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                <div className="flex justify-between font-medium">
-                  <span style={{ color: "var(--text-secondary)" }}>Subtotal</span>
-                  <span style={{ color: "var(--text-primary)" }}>Rs. {cartTotal.toLocaleString()}</span>
+              {/* Billing Summary List */}
+              <div className="space-y-3 text-xs bg-stone-950 border border-stone-850 p-4 rounded-xl">
+                <div className="flex justify-between text-stone-500">
+                  <span>Subtotal</span>
+                  <span className="font-mono text-stone-300">Rs. {cartTotal.toLocaleString()}</span>
                 </div>
-
-                <div className="flex justify-between font-medium">
-                  <span style={{ color: "var(--text-secondary)" }}>Shipping &amp; Handling</span>
-                  <span>
-                    {appliedCoupon?.type === "free_shipping" || shippingFee === 0 ? (
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded-full border border-emerald-400/20">
-                        FREE
-                      </span>
-                    ) : (
-                      `Rs. ${shippingFee.toLocaleString()}`
-                    )}
+                <div className="flex justify-between text-stone-500">
+                  <span>Shipping &amp; Handling</span>
+                  <span className="font-mono text-stone-300">
+                    {appliedCoupon?.type === "free_shipping" || shippingFee === 0 ? "FREE" : `Rs. ${shippingFee.toLocaleString()}`}
                   </span>
                 </div>
-
                 {upgradeGift && (
-                  <div className="flex justify-between font-medium">
-                    <span style={{ color: "var(--text-secondary)" }}>🎁 Premium Gift Package</span>
-                    <span className={appliedCoupon?.type === "free_gift" ? "text-emerald-400 font-bold" : "text-stone-200"}>
-                      {appliedCoupon?.type === "free_gift" ? "FREE" : "Rs. 499"}
-                    </span>
+                  <div className="flex justify-between text-stone-500">
+                    <span>Premium Gift Packaging</span>
+                    <span className="font-mono text-stone-300">Rs. 499</span>
                   </div>
                 )}
-
                 {appliedCoupon && discountAmount > 0 && (
-                  <div className="flex justify-between font-medium text-emerald-400">
-                    <span>Discount ({appliedCoupon.code})</span>
-                    <span>- Rs. {discountAmount.toLocaleString()}</span>
+                  <div className="flex justify-between text-emerald-400">
+                    <span>Coupon Discount ({appliedCoupon.code})</span>
+                    <span className="font-mono">- Rs. {discountAmount.toLocaleString()}</span>
                   </div>
                 )}
-
-                {settings?.taxRate > 0 && (
-                  <div className="flex justify-between font-medium">
-                    <span style={{ color: "var(--text-secondary)" }}>Estimated Tax ({settings.taxRate}%)</span>
-                    <span style={{ color: "var(--text-primary)" }}>Rs. {taxAmount.toLocaleString()}</span>
-                  </div>
-                )}
-
-                <div className="border-t pt-4 flex justify-between text-sm font-bold" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                  <span style={{ color: "var(--text-primary)" }}>Order Total</span>
-                  <span style={{ color: "#C8A96A" }}>Rs. {grandTotal.toLocaleString()}</span>
+                <div className="h-px bg-stone-900" />
+                <div className="flex justify-between items-baseline pt-1">
+                  <span className="font-bold text-white uppercase tracking-wider text-[10px]">Grand Order Total</span>
+                  <span className="font-bold text-[#C8A14A] font-mono text-sm">Rs. {grandTotal.toLocaleString()}</span>
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="py-3.5 bg-stone-950 border border-stone-850 text-stone-400 rounded-xl text-[9px] font-bold uppercase tracking-wider cursor-pointer"
+                >
+                  Back to Payment
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="py-3.5 bg-[#C8A14A] hover:bg-[#b09241] text-black font-bold rounded-xl text-[9px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {loading ? "Confirming Dispatch..." : `Place Order (Rs. ${grandTotal.toLocaleString()})`}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
+
         </div>
       </main>
 

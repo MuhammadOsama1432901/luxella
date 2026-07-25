@@ -4,9 +4,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useCart } from "@/providers/CartProvider";
-import { CartIcon, UserIcon, MenuIcon } from "@/components/ui/icons";
 import { useRouter, usePathname } from "next/navigation";
-import { LogOut, Shield, Search, X, Home, ShoppingBag, Heart, Settings, ClipboardList, FileText, Sparkles, Gift } from "lucide-react";
+import { LogOut, Shield, Search, X, Home, ShoppingBag, Heart, Settings, ClipboardList, FileText, Sparkles, Gift, Menu } from "lucide-react";
 import { toast } from "sonner";
 import { useTheme } from "@/providers/ThemeProvider";
 import AnnouncementBar from "@/components/promotions/AnnouncementBar";
@@ -132,199 +131,67 @@ export default function Navbar() {
       <header
         className={`sticky top-0 z-50 transition-transform duration-300 ${
           showHeader ? "translate-y-0" : "-translate-y-full"
-        }`}
-        style={{
-          background: "var(--nav-bg)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          borderBottom: "1px solid rgba(200,169,106,0.12)",
-        }}
+        } bg-[#0B0B0C] border-b border-stone-900/60`}
       >
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6">
+        <div className="flex h-16 items-center justify-between px-4">
           
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl overflow-hidden shadow-lg group-hover:scale-105 transition-transform duration-300 border border-[rgba(200,169,106,0.2)] flex-shrink-0">
-              <Image
-                src="/images/logo/logo-crest.jpg"
-                alt="LUXELLA Crest"
-                width={40}
-                height={40}
-                className="object-cover w-full h-full"
-              />
-            </div>
+          {/* Left: Hamburger Menu */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="flex items-center justify-center p-2 text-stone-400 hover:text-[#C8A14A] transition-colors cursor-pointer"
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
+
+          {/* Center: Luxella Logo Wordmark */}
+          <Link href="/" className="flex items-center justify-center group">
             <span
-              className="text-2xl font-bold tracking-[0.22em] transition-all duration-300 text-[var(--text-primary)] group-hover:text-[#C8A96A]"
+              className="text-xl font-bold tracking-[0.25em] text-[#F8F6F2] group-hover:text-[#C8A14A] transition-colors"
               style={{ fontFamily: "var(--font-playfair)" }}
             >
               LUXELLA
             </span>
           </Link>
 
-          {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="relative px-4 py-2 text-sm font-medium transition-all duration-200 rounded-lg group"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                <span className="group-hover:text-[var(--text-primary)] transition-colors">
-                  {link.label}
-                </span>
-                <span
-                  className="absolute bottom-1 left-4 right-4 h-px scale-x-0 group-hover:scale-x-100 transition-transform duration-300 rounded-full"
-                  style={{ background: "linear-gradient(90deg, transparent, #C8A96A, transparent)" }}
-                />
-              </Link>
-            ))}
-
-            {/* Try-On special pill */}
-            <Link
-              href="/try-on"
-              className="flex items-center gap-1.5 px-5 py-2 rounded-full text-sm font-semibold transition-all duration-300 hover:scale-105 ml-2"
-              style={{
-                background: "linear-gradient(135deg, #C8A96A, #8B6914)",
-                color: "white",
-                boxShadow: "0 4px 16px rgba(200,169,106,0.3)",
-              }}
-            >
-              ✦ Try-On
-            </Link>
-          </nav>
-
-          {/* Right Controls Container */}
-          <div className="flex items-center gap-2">
-            
-            {/* User Section (Desktop) */}
-            {user ? (
-              <div className="relative hidden md:block">
-                <button
-                  onClick={() => setShowDropdown((v) => !v)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 group border border-transparent hover:border-[#C8A96A]/30 cursor-pointer"
-                  style={{ color: "var(--text-secondary)" }}
-                >
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md"
-                    style={{ background: "linear-gradient(135deg, var(--gold-light), var(--gold-dark))" }}
-                  >
-                    {user.name.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="group-hover:text-[var(--text-primary)] transition-colors">
-                    {user.name.split(" ")[0]}
-                  </span>
-                </button>
-
-                {showDropdown && (
-                  <div
-                    className="absolute right-0 mt-2 w-48 rounded-2xl shadow-xl py-2 border text-left z-50"
-                    style={{
-                      background: "var(--bg-elevated)",
-                      borderColor: "rgba(200, 169, 106, 0.15)",
-                    }}
-                  >
-                    {user.role === "admin" && (
-                      <Link
-                        href="/admin"
-                        onClick={() => setShowDropdown(false)}
-                        className="flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/5 transition-colors uppercase tracking-wider"
-                      >
-                        <Shield size={14} className="text-[#C8A96A]" /> Admin Panel
-                      </Link>
-                    )}
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-4 py-2.5 text-xs font-semibold text-rose-400 hover:bg-rose-500/10 transition-colors uppercase tracking-wider text-left cursor-pointer"
-                    >
-                      <LogOut size={14} /> Log Out
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link
-                href="/login"
-                className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 group border border-transparent hover:border-[#C8A96A]/30"
-                style={{ color: "var(--text-secondary)" }}
-              >
-                <span
-                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-                  style={{ background: "rgba(200, 169, 106, 0.1)" }}
-                >
-                  <UserIcon size={14} className="text-[#C8A96A]" />
-                </span>
-                <span className="group-hover:text-[var(--text-primary)] transition-colors">Login</span>
-              </Link>
-            )}
-
-            {/* Global Search Button */}
+          {/* Right: Search, Wishlist, Cart */}
+          <div className="flex items-center gap-1">
+            {/* Search */}
             <button
               onClick={() => setShowSearchOverlay(true)}
-              className="flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200 group cursor-pointer"
-              style={{
-                background: "rgba(200,169,106,0.06)",
-                border: "1px solid rgba(200,169,106,0.15)",
-              }}
+              className="p-2 text-stone-400 hover:text-[#C8A14A] transition-colors cursor-pointer"
               aria-label="Search"
             >
-              <Search size={18} className="text-[#C8A96A] group-hover:scale-110 transition-transform" />
+              <Search size={18} />
             </button>
 
-            {/* Theme Toggle Button */}
-            <button
-              onClick={toggleTheme}
-              className="flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200 group cursor-pointer"
-              style={{
-                background: "rgba(200,169,106,0.06)",
-                border: "1px solid rgba(200,169,106,0.15)",
-              }}
-              aria-label="Toggle Theme"
+            {/* Wishlist / Offers */}
+            <Link
+              href="/offers"
+              className="p-2 text-stone-400 hover:text-[#C8A14A] transition-colors"
+              aria-label="Offers & Deals"
             >
-              {theme === "dark" ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#C8A96A] group-hover:scale-110 transition-transform">
-                  <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-[#C8A96A] group-hover:scale-110 transition-transform">
-                  <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-            </button>
+              <Heart size={18} />
+            </Link>
 
-            {/* Cart Link (Desktop only) */}
+            {/* Cart */}
             <Link
               href="/cart"
-              className="relative hidden md:flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200 group"
-              style={{
-                background: "rgba(200,169,106,0.06)",
-                border: "1px solid rgba(200,169,106,0.15)",
-              }}
+              className="relative p-2 text-stone-400 hover:text-[#C8A14A] transition-colors"
               aria-label="Cart"
             >
-              <CartIcon size={20} className="text-[#C8A96A] group-hover:scale-110 transition-transform" />
+              <ShoppingBag size={18} />
               {cart.length > 0 && (
                 <span
-                  className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full text-[10px] font-bold text-white shadow-md"
-                  style={{ background: "linear-gradient(135deg, #C8A96A, #8B6914)" }}
+                  className="absolute top-0.5 right-0.5 min-w-[14px] h-3.5 px-0.5 flex items-center justify-center rounded-full text-[8px] font-bold text-black font-sans shadow"
+                  style={{ background: "linear-gradient(135deg, #EAD09D, #C8A96A)" }}
                 >
                   {cart.length}
                 </span>
               )}
             </Link>
-
-            {/* Mobile Hamburger Menu (Full-screen trigger) */}
-            <button
-              onClick={() => setMobileOpen(true)}
-              className="md:hidden flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-200 cursor-pointer"
-              style={{ background: "rgba(200,169,106,0.06)", border: "1px solid rgba(200,169,106,0.15)" }}
-              aria-label="Menu"
-            >
-              <MenuIcon size={20} className="text-[#C8A96A]" />
-            </button>
-
           </div>
+
         </div>
       </header>
 
@@ -421,78 +288,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* ── Floating Mobile Bottom Navigation Bar ──────────────────────── */}
-      <nav
-        className="fixed bottom-5 inset-x-6 z-40 md:hidden flex justify-around items-center rounded-2xl border px-2 py-3 shadow-2xl backdrop-blur-lg"
-        style={{
-          background: "var(--bg-elevated)",
-          borderColor: "rgba(200, 169, 106, 0.18)",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05)",
-        }}
-      >
-        {/* Item 1: Home */}
-        <Link
-          href="/"
-          className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 ${
-            isActivePath("/") ? "text-[#C8A96A]" : "text-gray-500 hover:text-white"
-          }`}
-        >
-          <Home size={18} />
-          <span className="text-[8px] uppercase tracking-wider font-bold mt-1">Home</span>
-        </Link>
 
-        {/* Item 2: Shop */}
-        <Link
-          href="/shop"
-          className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 ${
-            isActivePath("/shop") ? "text-[#C8A96A]" : "text-gray-500 hover:text-white"
-          }`}
-        >
-          <ShoppingBag size={18} />
-          <span className="text-[8px] uppercase tracking-wider font-bold mt-1">Shop</span>
-        </Link>
-
-        {/* Item 3: AI Try-On */}
-        <Link
-          href="/try-on"
-          className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 ${
-            isActivePath("/try-on") ? "text-[#C8A96A]" : "text-gray-500 hover:text-white"
-          }`}
-        >
-          <Sparkles size={18} />
-          <span className="text-[8px] uppercase tracking-wider font-bold mt-1">Try-On</span>
-        </Link>
-
-        {/* Item 4: Cart */}
-        <Link
-          href="/cart"
-          className={`relative flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 ${
-            isActivePath("/cart") ? "text-[#C8A96A]" : "text-gray-500 hover:text-white"
-          }`}
-        >
-          <CartIcon size={18} />
-          <span className="text-[8px] uppercase tracking-wider font-bold mt-1">Cart</span>
-          {cart.length > 0 && (
-            <span
-              className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full text-[7px] font-bold text-white flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg, #C8A96A, #8B6914)" }}
-            >
-              {cart.length}
-            </span>
-          )}
-        </Link>
-
-        {/* Item 5: Account (routes to login or admin panel based on session) */}
-        <Link
-          href={user ? (user.role === "admin" ? "/admin" : "/") : "/login"}
-          className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all duration-300 ${
-            isActivePath("/login") || isActivePath("/admin") ? "text-[#C8A96A]" : "text-gray-500 hover:text-white"
-          }`}
-        >
-          <UserIcon size={18} />
-          <span className="text-[8px] uppercase tracking-wider font-bold mt-1">Account</span>
-        </Link>
-      </nav>
 
       {/* ── Global Search Overlay Modal ───────────────────────────────── */}
       {showSearchOverlay && (
