@@ -188,9 +188,9 @@ export default function ProductGrid({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-2 gap-4 py-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="animate-pulse bg-[#121212] rounded-[18px] border border-stone-850 overflow-hidden">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="animate-pulse bg-[#121212] rounded-[18px] border border-stone-900 overflow-hidden">
             <div className="aspect-square bg-stone-900" />
             <div className="p-3.5 space-y-2">
               <div className="h-3 bg-stone-800 rounded w-3/4" />
@@ -214,11 +214,11 @@ export default function ProductGrid({
 
   return (
     <div className="py-2">
-      <p className="text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-4">
+      <p className="text-[9px] uppercase tracking-widest text-stone-500 font-bold mb-5">
         {filteredProducts.length} piece{filteredProducts.length !== 1 ? 's' : ''} found
       </p>
-      {/* 2-column grid — works perfectly in the 430px mobile container */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Responsive grid: 2 cols mobile, 3 cols tablet, 4 cols desktop */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
         {filteredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}

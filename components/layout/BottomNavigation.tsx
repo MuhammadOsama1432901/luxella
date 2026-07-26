@@ -49,11 +49,12 @@ export default function BottomNavigation() {
 
   return (
     <AnimatePresence>
+      {/* Only render on mobile screens — desktop uses the horizontal Navbar */}
       <motion.div
         initial={{ y: 100, opacity: 0 }}
         animate={{ y: isVisible ? 0 : 100, opacity: isVisible ? 1 : 0 }}
         transition={{ duration: 0.35, ease: "easeInOut" }}
-        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-[380px]"
+        className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-[380px] md:hidden"
       >
         {/* Luxury Glassmorphic Pill */}
         <nav

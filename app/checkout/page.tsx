@@ -424,8 +424,8 @@ export default function CheckoutPage() {
     <>
       <Navbar />
 
-      <main className="bg-[#0B0B0C] text-[#F8F6F2] min-h-screen pb-24 relative pt-4">
-        <div className="px-4 py-4 space-y-6">
+      <main className="min-h-screen pb-24 md:pb-12 pt-4" style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}>
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 py-4 space-y-6">
 
           {/* Minimal header */}
           <div className="flex items-center justify-between border-b border-stone-900 pb-3">

@@ -85,27 +85,27 @@ export default function PremiumPackages() {
   };
 
   return (
-    <section className="py-12 bg-[#0B0B0C] border-b border-stone-900/60">
-      <div className="px-4">
+    <section className="py-14 border-b border-stone-900/60" style={{ background: "var(--bg-base)" }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
         <div className="mb-8">
-          <p className="text-[9px] uppercase tracking-[0.25em] font-bold text-[#C8A14A] mb-1">
+          <p className="text-[9px] uppercase tracking-[0.25em] font-bold text-[#C8A14A] mb-2">
             ✦ Curated Combinations
           </p>
-          <h2 className="text-xl font-bold text-white uppercase tracking-wider" style={{ fontFamily: "var(--font-playfair)" }}>
+          <h2 className="text-2xl sm:text-3xl font-bold" style={{ fontFamily: "var(--font-playfair)", color: "var(--text-primary)" }}>
             Atelier Bundles
           </h2>
         </div>
 
-        {/* Packages Horizontal Carousel */}
-        <div className="flex gap-5 overflow-x-auto scrollbar-none pb-2 scroll-smooth">
+        {/* On mobile: horizontal carousel. On desktop: responsive grid */}
+        <div className="flex gap-5 overflow-x-auto scrollbar-none pb-2 sm:overflow-visible sm:grid sm:grid-cols-2 lg:grid-cols-3">
           {PREMIUM_PACKAGES.map((pkg) => {
             const savings = pkg.originalPrice - pkg.packagePrice;
             return (
               <div
                 key={pkg.id}
-                className="w-[280px] flex-shrink-0 bg-[#111111] border border-stone-850 rounded-[18px] overflow-hidden flex flex-col justify-between"
+                className="w-[280px] sm:w-auto flex-shrink-0 sm:flex-shrink bg-[#111111] border border-stone-850 rounded-[18px] overflow-hidden flex flex-col justify-between"
               >
                 <div>
                   <div className="h-40 relative bg-stone-950">

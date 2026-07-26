@@ -121,7 +121,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             <div className="flex items-center gap-0.5">
               <Star size={9} fill="#C8A14A" className="text-[#C8A14A]" />
-              <span className="text-[8px] text-[#A5A5A5] font-semibold">{product.rating % 1 === 0 ? product.rating : product.rating.toFixed(1)}</span>
+              <span className="text-[8px] text-[#A5A5A5] font-semibold">{product.rating}.0</span>
             </div>
           </div>
         </div>

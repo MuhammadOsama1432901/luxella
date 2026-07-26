@@ -123,7 +123,7 @@ export default function PrivacyPage() {
     <>
       <Navbar />
 
-      <main className="min-h-screen bg-[#080808] text-white pt-12 pb-24 relative overflow-hidden">
+      <main className="min-h-screen bg-[#080808] text-white pt-12 pb-24 md:pb-12 relative overflow-hidden">
         <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full opacity-[0.04] pointer-events-none"
              style={{ background: "radial-gradient(circle, #C8A96A, transparent 70%)" }} />
 

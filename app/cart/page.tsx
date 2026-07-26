@@ -21,8 +21,8 @@ export default function CartPage() {
     <>
       <Navbar />
 
-      <main className="bg-[#0B0B0C] text-[#F8F6F2] min-h-screen pb-24 relative">
-        <div className="px-4 py-6 space-y-6">
+      <main className="min-h-screen pb-24 md:pb-12" style={{ background: "var(--bg-base)", color: "var(--text-primary)" }}>
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
           
           {/* Header */}
           <div className="flex justify-between items-baseline border-b border-stone-900 pb-3">

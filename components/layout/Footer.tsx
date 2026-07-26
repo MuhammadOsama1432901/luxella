@@ -62,12 +62,7 @@ export default function Footer() {
         
         {/* ── Desktop & Tablet Layout (Responsive Grid) ───────────────── */}
         {/* Changed from md:grid-cols-4 to sm:grid-cols-2 lg:grid-cols-4 to optimize layouts on medium viewports */}
-        {/* 
-          NOTE: In the 430px mobile-first container, both desktop and mobile layouts
-          are effectively at "mobile" width. We always show the compact accordion layout.
-          The full grid layout is kept for reference but hidden via CSS.
-        */}
-        <div className="hidden lg:grid lg:grid-cols-4 gap-12 lg:gap-8 pb-12 border-b border-white/5">
+        <div className="hidden lg:grid lg:grid-cols-4 gap-10 xl:gap-12 pb-12 border-b border-white/5">
           {/* Logo & Info */}
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-3 group">
@@ -233,7 +228,7 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* ── Mobile & App Layout (always shown in 430px container) ─────────────────────────────── */}
+        {/* ── Mobile & Tablet layout (below lg) ─────────────────────────────── */}
         <div className="lg:hidden space-y-5">
           
           {/* Logo & Description */}

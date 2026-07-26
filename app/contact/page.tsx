@@ -13,7 +13,7 @@ export default function ContactPage() {
   return (
     <>
       <Navbar />
-      <main>
+      <main className="pb-20 md:pb-0">
         {/* ── Hero ──────────────────────────────────────────────────── */}
         <section className="relative bg-[#111] text-white py-20 px-6 text-center overflow-hidden">
           <div
